@@ -1,7 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { Pagination, Table } from "react-bootstrap";
+import { Fragment, type ReactNode } from "react";
+import { Button, Pagination, Table } from "react-bootstrap";
 
 export interface DataTableColumn<T> {
   key: string;
@@ -20,6 +20,10 @@ interface DataTableProps<T> {
   pageSize?: number;
   onPageChange?: (page: number) => void;
   onRowClick?: (item: T) => void;
+  renderRowDetails?: (item: T) => ReactNode;
+  header?: ReactNode;
+  onCreate?: () => void;
+  createLabel?: string;
   className?: string;
 }
 
@@ -32,6 +36,10 @@ export function DataTable<T>({
   pageSize = 10,
   onPageChange,
   onRowClick,
+  renderRowDetails,
+  header,
+  onCreate,
+  createLabel = "Criar novo",
   className = ""
 }: DataTableProps<T>) {
   const pageCount = Math.max(1, Math.ceil(data.length / pageSize));
@@ -45,6 +53,16 @@ export function DataTable<T>({
 
   return (
     <>
+      {header || onCreate ? (
+        <div className="ui-data-table-toolbar">
+          {header ? <div className="ui-data-table-heading">{header}</div> : null}
+          {onCreate ? (
+            <Button type="button" className="starter-button" onClick={onCreate}>
+              {createLabel}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
       <Table responsive hover className={`app-table ui-data-table align-middle ${className}`.trim()}>
         <thead>
           <tr>
@@ -56,30 +74,39 @@ export function DataTable<T>({
           </tr>
         </thead>
         <tbody>
-          {visibleItems.map((item) => (
-            <tr
-              key={getRowKey(item)}
-              className={isInteractive ? "ui-data-table-row-interactive" : undefined}
-              onClick={isInteractive ? () => selectRow(item) : undefined}
-              onKeyDown={
-                isInteractive
-                  ? (event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        selectRow(item);
-                      }
-                    }
-                  : undefined
-              }
-              tabIndex={isInteractive ? 0 : undefined}
-            >
-              {columns.map((column) => (
-                <td key={column.key} className={column.className}>
-                  {column.render(item)}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {visibleItems.map((item) => {
+            const details = renderRowDetails?.(item);
+            return (
+              <Fragment key={getRowKey(item)}>
+                <tr
+                  className={isInteractive ? "ui-data-table-row-interactive" : undefined}
+                  onClick={isInteractive ? () => selectRow(item) : undefined}
+                  onKeyDown={
+                    isInteractive
+                      ? (event) => {
+                          if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+                            event.preventDefault();
+                            selectRow(item);
+                          }
+                        }
+                      : undefined
+                  }
+                  tabIndex={isInteractive ? 0 : undefined}
+                >
+                  {columns.map((column) => (
+                    <td key={column.key} className={column.className}>
+                      {column.render(item)}
+                    </td>
+                  ))}
+                </tr>
+                {details ? (
+                  <tr className="ui-data-table-details-row">
+                    <td colSpan={columns.length}>{details}</td>
+                  </tr>
+                ) : null}
+              </Fragment>
+            );
+          })}
           {visibleItems.length === 0 ? (
             <tr>
               <td colSpan={columns.length} className="ui-data-table-empty">

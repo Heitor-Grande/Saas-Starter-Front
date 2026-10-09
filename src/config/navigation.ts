@@ -10,53 +10,27 @@ export type NavigationLink = NavigationItem & { href: string };
 
 export const mainNavigation: NavigationItem[] = [
   {
-    id: "overview",
-    label: "Visão Geral",
-    description: "Resumo administrativo",
-    children: [
-      {
-        id: "general-dashboard",
-        href: "/dashboard",
-        label: "Dashboard Geral",
-        description: "Indicadores do sistema"
-      }
-    ]
+    id: "general-dashboard",
+    href: "/dashboard",
+    label: "Dashboard Geral",
+    description: "Indicadores"
   },
   {
-    id: "administration",
-    label: "Administração",
-    description: "Gestão da aplicação",
+    id: "my-organization",
+    label: "Minha Organização",
+    description: "Dados e membros da organização",
     children: [
+      {
+        id: "organizations",
+        href: "/organizacoes",
+        label: "Organização",
+        description: "Dados da minha organização"
+      },
       {
         id: "users",
         href: "/usuarios",
         label: "Usuários",
-        description: "Contas e acessos"
-      },
-      {
-        id: "profiles-permissions",
-        label: "Perfis e Permissões",
-        description: "Papéis e matriz de acesso",
-        children: [
-          {
-            id: "profiles",
-            href: "/perfis-acesso",
-            label: "Perfis",
-            description: "Papéis administrativos"
-          },
-          {
-            id: "permissions",
-            href: "/permissoes",
-            label: "Permissões",
-            description: "Matriz de recursos"
-          }
-        ]
-      },
-      {
-        id: "organizations",
-        href: "/organizacoes",
-        label: "Organizações",
-        description: "Workspaces e contas"
+        description: "Lista de todos os usuários da organização"
       }
     ]
   },
@@ -65,6 +39,12 @@ export const mainNavigation: NavigationItem[] = [
     label: "Sistema",
     description: "Operação e parâmetros",
     children: [
+      {
+        id: "general-admin-dashboard",
+        href: "/dashboardadmin",
+        label: "Dashboard Admin",
+        description: "Indicadores da aplicação"
+      },
       {
         id: "audit-logs",
         href: "/logs-auditoria",
@@ -82,8 +62,21 @@ export const mainNavigation: NavigationItem[] = [
         href: "/planos-assinaturas",
         label: "Planos e Assinaturas",
         description: "Planos de assinatura do usuário"
-      }
+      },
+      {
+        id: "profiles",
+        href: "/perfis-acesso",
+        label: "Perfis",
+        description: "Papéis administrativos"
+      },
+      {
+        id: "organizacoes-e-usuarios",
+        href: "/organizacoes-usuarios",
+        label: "Organizações e Usuários",
+        description: "Gerenciamento de organizações e usuários"
+      },
     ]
+
   }
 ];
 

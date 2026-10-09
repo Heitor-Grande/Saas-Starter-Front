@@ -187,7 +187,12 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         ))}
       </nav>
       <div className="sidebar-auth">
-        <Link href="/usuarios" onClick={onNavigate}>
+        <Link
+          aria-current={pathname === "/meu-usuario" ? "page" : undefined}
+          className={pathname === "/meu-usuario" ? "active" : undefined}
+          href="/meu-usuario"
+          onClick={onNavigate}
+        >
           Meu usuário
         </Link>
         <Button className="starter-button" size="sm" href="/login" onClick={onNavigate}>

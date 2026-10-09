@@ -34,7 +34,7 @@ export default function GlobalSettingsPage() {
   }
 
   return (
-    <>
+    <div className="audit-page">
       <SectionHeader
         eyebrow="Sistema"
         title="Configurações Globais"
@@ -137,6 +137,6 @@ export default function GlobalSettingsPage() {
           </Form>
         </Card>
       </Tab.Container>
-    </>
+    </div>
   );
 }

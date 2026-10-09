@@ -77,17 +77,14 @@ export default function PlansSubscriptionsPage() {
   }
 
   return (
-    <div className="plans-page">
-      <div className="plans-page-heading">
-        <SectionHeader
-          eyebrow="Administração"
-          title="Planos e Assinaturas"
-          description="Gerencie os planos disponíveis para as organizações."
-        />
-        <Button className="starter-button" onClick={() => setShowCreateModal(true)}>
-          Novo plano
-        </Button>
-      </div>
+    <div className="audit-page">
+
+      <SectionHeader
+        eyebrow="Administração"
+        title="Planos e Assinaturas"
+        description="Gerencie os planos disponíveis para as organizações."
+      />
+
 
       <Card className="app-card plans-filter-card">
         <Card.Body>
@@ -123,16 +120,20 @@ export default function PlansSubscriptionsPage() {
 
       <Card className="app-card plans-table-card">
         <Card.Body>
-          <div className="card-heading">
-            <div>
-              <h2>Planos cadastrados</h2>
-              <p className="plans-table-description">Valores mensais demonstrativos.</p>
-            </div>
-            <Badge bg="light" text="dark">
-              {filteredPlans.length} {filteredPlans.length === 1 ? "plano" : "planos"}
-            </Badge>
-          </div>
           <DataTable
+            header={
+              <div className="card-heading">
+                <div>
+                  <h2>Planos cadastrados</h2>
+                  <p className="plans-table-description">Valores mensais demonstrativos.</p>
+                </div>
+                <Badge bg="light" text="dark">
+                  {filteredPlans.length} {filteredPlans.length === 1 ? "plano" : "planos"}
+                </Badge>
+              </div>
+            }
+            onCreate={() => setShowCreateModal(true)}
+            createLabel="Novo plano"
             columns={planColumns}
             data={filteredPlans}
             getRowKey={(plan) => plan.id}

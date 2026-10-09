@@ -70,21 +70,26 @@ export const organizations: Organization[] = [
 export const accessProfiles: AccessProfile[] = [
   {
     name: "Administrador",
-    description: "Gerencia configuracoes, usuarios, perfis e organizacoes.",
+    description: "Gerencia configurações, usuários, perfis e organizações.",
     users: 6,
-    permissions: ["Usuarios", "Organizacoes", "Permissoes", "Configuracoes"]
+    permissions: [
+      "users.edit", "users.view", "users.create", "users.delete",
+      "organizations.edit", "organizations.view", "organizations.create", "organizations.delete",
+      "profiles.edit", "profiles.view", "profiles.create", "profiles.delete",
+      "global-settings.edit", "global-settings.view"
+    ]
   },
   {
     name: "Gestor",
-    description: "Acompanha operacao e gerencia usuarios do proprio workspace.",
+    description: "Acompanha a operação e gerencia usuários do próprio workspace.",
     users: 18,
-    permissions: ["Dashboard", "Usuarios", "Relatorios"]
+    permissions: ["general-dashboard.view", "users.view", "users.edit", "users.create"]
   },
   {
     name: "Leitor",
-    description: "Acessa visualizacoes sem alterar dados administrativos.",
+    description: "Acessa visualizações sem alterar dados administrativos.",
     users: 54,
-    permissions: ["Dashboard", "Perfil"]
+    permissions: ["general-dashboard.view", "profiles.view"]
   }
 ];
 

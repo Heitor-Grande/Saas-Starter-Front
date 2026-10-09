@@ -160,17 +160,18 @@ export default function AuditLogsPage() {
 
       <Card className="app-card audit-table-card">
         <Card.Body>
-          <div className="card-heading">
-            <div>
-              <h2>Histórico de operações</h2>
-              <p className="audit-table-description">Selecione um registro para visualizar os detalhes.</p>
-            </div>
-            <Badge bg="light" text="dark">
-              {filteredLogs.length} {filteredLogs.length === 1 ? "registro" : "registros"}
-            </Badge>
-          </div>
-
           <DataTable
+            header={
+              <div className="card-heading">
+                <div>
+                  <h2>Histórico de operações</h2>
+                  <p className="audit-table-description">Selecione um registro para visualizar os detalhes.</p>
+                </div>
+                <Badge bg="light" text="dark">
+                  {filteredLogs.length} {filteredLogs.length === 1 ? "registro" : "registros"}
+                </Badge>
+              </div>
+            }
             columns={auditColumns}
             data={filteredLogs}
             getRowKey={(log) => log.id}

@@ -93,6 +93,7 @@ Evite estilos inline e valores visuais repetidos desnecessariamente.
 
 ### Componentes UI padrao
 
+- Utilize `<div className="audit-page">` como contêiner principal no desenvolvimento de novas `page.tsx`. Essa é a estrutura padrão da aplicação; reutilize seus estilos de layout, espaçamento e altura útil.
 - Utilize `src/components/ui/DataTable.tsx` como padrao para tabelas de dados. Estenda suas propriedades quando uma necessidade puder ser compartilhada; nao crie paginacao ou estrutura de tabela duplicada nas paginas.
 - Utilize `src/components/ui/FormInput.tsx`, `FormSelect.tsx` e `FormCheckbox.tsx` como padrao para campos de formulario.
 - Evite usar `Form.Control`, `Form.Select` e `Form.Check` diretamente nas paginas, salvo quando o componente compartilhado nao suportar um requisito especifico.

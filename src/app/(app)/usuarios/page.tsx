@@ -1,82 +1,86 @@
 "use client";
 
-import { Badge, Button, Card, Col, Form, Row, Table } from "react-bootstrap";
+import { useState } from "react";
+import { Badge, Card } from "react-bootstrap";
+import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { adminUsers } from "@/mocks/admin";
+import { organizationUsers, type OrganizationUser } from "@/mocks/organizationUsers";
 
-export default function UsersAdminPage() {
+const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  dateStyle: "short",
+  timeStyle: "short"
+});
+
+function formatDate(value: string | null) {
+  return value ? dateFormatter.format(new Date(value)) : "Nunca acessou";
+}
+
+const columns: DataTableColumn<OrganizationUser>[] = [
+  {
+    key: "name",
+    header: "Nome",
+    render: (user) => <strong>{user.name}</strong>
+  },
+  {
+    key: "profile",
+    header: "Perfil",
+    render: (user) => user.profile
+  },
+  {
+    key: "active",
+    header: "Ativo",
+    render: (user) => (
+      <span className={`status-pill admin-status-${user.active ? "ativo" : "inativo"}`}>
+        {user.active ? "Ativo" : "Inativo"}
+      </span>
+    )
+  },
+  {
+    key: "createdAt",
+    header: "Data de cadastro",
+    render: (user) => formatDate(user.createdAt)
+  },
+  {
+    key: "lastAccessAt",
+    header: "Último acesso",
+    render: (user) => formatDate(user.lastAccessAt)
+  }
+];
+
+export default function OrganizationUsersPage() {
+  const [page, setPage] = useState(1);
+
   return (
-    <>
+    <div className="audit-page organization-users-page">
       <SectionHeader
-        eyebrow="Administracao"
-        title="Usuarios"
-        description="Interface demonstrativa para listar, filtrar e preparar convites de usuarios sem autenticação ou persistencia real."
+        eyebrow="Minha Organização"
+        title="Usuários"
+        description="Consulte todos os usuários vinculados à sua organização."
       />
-      <Row className="g-3">
-        <Col lg={8}>
-          <Card className="app-card h-100">
-            <Card.Body>
+
+      <Card className="app-card organization-users-list-card">
+        <Card.Body>
+          <DataTable
+            header={
               <div className="card-heading">
-                <h2>Usuarios cadastrados</h2>
+                <h2>Usuários da organização</h2>
                 <Badge bg="light" text="dark">
-                  {adminUsers.length} registros
+                  {organizationUsers.length} usuários
                 </Badge>
               </div>
-              <Table responsive className="app-table align-middle">
-                <thead>
-                  <tr>
-                    <th>Usuario</th>
-                    <th>Perfil</th>
-                    <th>Organizacao</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {adminUsers.map((user) => (
-                    <tr key={user.email}>
-                      <td>
-                        <strong>{user.name}</strong>
-                        <small>{user.email}</small>
-                      </td>
-                      <td>{user.role}</td>
-                      <td>{user.organization}</td>
-                      <td>
-                        <span className={`status-pill admin-status-${user.status.toLowerCase()}`}>
-                          {user.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col lg={4}>
-          <Card className="app-card h-100">
-            <Card.Body>
-              <div className="card-heading">
-                <h2>Novo convite</h2>
-              </div>
-              <Form className="demo-form">
-                <Form.Group controlId="inviteEmail">
-                  <Form.Label>Email</Form.Label>
-                  <Form.Control placeholder="usuario@example.com" type="email" />
-                </Form.Group>
-                <Form.Group controlId="inviteRole">
-                  <Form.Label>Perfil</Form.Label>
-                  <Form.Select defaultValue="Gestor">
-                    <option>Administrador</option>
-                    <option>Gestor</option>
-                    <option>Leitor</option>
-                  </Form.Select>
-                </Form.Group>
-                <Button className="starter-button">Simular convite</Button>
-              </Form>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </>
+            }
+            onCreate={() => undefined}
+            createLabel="Convidar usuário"
+            columns={columns}
+            data={organizationUsers}
+            getRowKey={(user) => user.id}
+            page={page}
+            pageSize={4}
+            onPageChange={setPage}
+            emptyMessage="Nenhum usuário cadastrado."
+          />
+        </Card.Body>
+      </Card>
+    </div>
   );
 }
