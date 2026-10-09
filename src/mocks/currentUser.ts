@@ -9,13 +9,6 @@ export interface CurrentUser {
   organization: string;
   profile: string;
   jobTitle: string;
-  postalCode: string;
-  street: string;
-  addressNumber: string;
-  complement: string;
-  neighborhood: string;
-  city: string;
-  state: string;
 }
 
 export const initialCurrentUser: CurrentUser = {
@@ -28,12 +21,5 @@ export const initialCurrentUser: CurrentUser = {
   active: true,
   organization: "Horizonte Tecnologia",
   profile: "Administrador",
-  jobTitle: "Gerente de Operações",
-  postalCode: "01310-100",
-  street: "Avenida Paulista",
-  addressNumber: "1000",
-  complement: "Conjunto 82",
-  neighborhood: "Bela Vista",
-  city: "São Paulo",
-  state: "SP"
+  jobTitle: "Gerente de Operações"
 };

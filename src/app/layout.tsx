@@ -4,7 +4,10 @@ import "@/styles/cssGlobal.css";
 
 export const metadata: Metadata = {
   title: "SaaS Starter",
-  description: "Template frontend reutilizavel para produtos SaaS."
+  description: "Template frontend reutilizavel para produtos SaaS.",
+  icons: {
+    icon: "/images/starter-dashboard.svg"
+  }
 };
 
 interface RootLayoutProps {

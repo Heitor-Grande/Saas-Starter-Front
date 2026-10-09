@@ -13,11 +13,6 @@ import { initialCurrentUser, type CurrentUser } from "@/mocks/currentUser";
 type EditableField = Exclude<keyof CurrentUser, "active">;
 type UserErrors = Partial<Record<EditableField, string>>;
 
-const states = [
-  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
-  "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
-];
-
 export default function CurrentUserPage() {
   const [user, setUser] = useState<CurrentUser>(initialCurrentUser);
   const [activeTab, setActiveTab] = useState("personal");
@@ -85,7 +80,7 @@ export default function CurrentUserPage() {
       <SectionHeader
         eyebrow="Conta"
         title="Meu usuário"
-        description="Gerencie seus dados pessoais, informações de contato e endereço."
+        description="Gerencie seus dados pessoais e informações de contato."
       />
 
       <Tab.Container activeKey={activeTab} onSelect={(key) => setActiveTab(key ?? "personal")}>
@@ -94,7 +89,6 @@ export default function CurrentUserPage() {
             <Nav variant="tabs" className="global-settings-tabs">
               <Nav.Item><Nav.Link eventKey="personal">Dados pessoais</Nav.Link></Nav.Item>
               <Nav.Item><Nav.Link eventKey="contact">Vínculo e contato</Nav.Link></Nav.Item>
-              <Nav.Item><Nav.Link eventKey="address">Endereço</Nav.Link></Nav.Item>
             </Nav>
           </div>
 
@@ -126,10 +120,6 @@ export default function CurrentUserPage() {
                         onChange={(event) => updateField("fullName", event.target.value)} error={errors.fullName} required />
                     </Col>
                     <Col md={6}>
-                      <FormInput id="userSocialName" label="Nome social" value={user.socialName}
-                        onChange={(event) => updateField("socialName", event.target.value)} helperText="Preenchimento opcional." />
-                    </Col>
-                    <Col md={6}>
                       <FormInput id="userCpf" label="CPF" value={user.cpf} maxLength={14}
                         placeholder="000.000.000-00" onChange={(event) => updateField("cpf", event.target.value)} error={errors.cpf} required />
                     </Col>
@@ -137,7 +127,9 @@ export default function CurrentUserPage() {
                       <FormInput id="userBirthDate" label="Data de nascimento" type="date" value={user.birthDate}
                         onChange={(event) => updateField("birthDate", event.target.value)} error={errors.birthDate} required />
                     </Col>
-                    <Col xs={12}>
+                  </Row>
+                  <Row>
+                    <Col xs={2} className="mt-3">
                       <FormCheckbox id="userActive" label="Usuário ativo" type="switch" checked={user.active}
                         onChange={(event) => setUser((current) => ({ ...current, active: event.target.checked }))} />
                     </Col>
@@ -175,42 +167,6 @@ export default function CurrentUserPage() {
                   </Row>
                 </Tab.Pane>
 
-                <Tab.Pane eventKey="address">
-                  <div className="global-settings-section-heading"><h2>Endereço</h2></div>
-                  <Row className="g-3">
-                    <Col md={4}>
-                      <FormInput id="userPostalCode" label="CEP" value={user.postalCode} maxLength={9}
-                        placeholder="00000-000" onChange={(event) => updateField("postalCode", event.target.value)} />
-                    </Col>
-                    <Col md={8}>
-                      <FormInput id="userStreet" label="Logradouro" value={user.street}
-                        onChange={(event) => updateField("street", event.target.value)} />
-                    </Col>
-                    <Col md={3}>
-                      <FormInput id="userAddressNumber" label="Número" value={user.addressNumber}
-                        onChange={(event) => updateField("addressNumber", event.target.value)} />
-                    </Col>
-                    <Col md={5}>
-                      <FormInput id="userComplement" label="Complemento" value={user.complement}
-                        onChange={(event) => updateField("complement", event.target.value)} />
-                    </Col>
-                    <Col md={4}>
-                      <FormInput id="userNeighborhood" label="Bairro" value={user.neighborhood}
-                        onChange={(event) => updateField("neighborhood", event.target.value)} />
-                    </Col>
-                    <Col md={8}>
-                      <FormInput id="userCity" label="Cidade" value={user.city}
-                        onChange={(event) => updateField("city", event.target.value)} />
-                    </Col>
-                    <Col md={4}>
-                      <FormSelect id="userState" label="Estado" value={user.state}
-                        onChange={(event) => updateField("state", event.target.value)}>
-                        <option value="">Selecione</option>
-                        {states.map((state) => <option key={state} value={state}>{state}</option>)}
-                      </FormSelect>
-                    </Col>
-                  </Row>
-                </Tab.Pane>
               </Tab.Content>
             </Card.Body>
 

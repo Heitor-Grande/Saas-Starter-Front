@@ -10,9 +10,13 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { organizationsWithMembers } from "@/mocks/organizationMembers";
 import { initialOrganizationSettings, type OrganizationSettings } from "@/mocks/organizationSettings";
 
-type EditableField = "name" | "cnpj" | "address" | "responsibleUserId";
+type EditableField = Exclude<keyof OrganizationSettings, "active" | "plan">;
 type SettingsErrors = Partial<Record<EditableField, string>>;
 const members = organizationsWithMembers.find((organization) => organization.id === "ORG-001")?.members ?? [];
+const states = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
+  "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+];
 
 export default function OrganizationSettingsPage() {
   const [settings, setSettings] = useState<OrganizationSettings>(initialOrganizationSettings);
@@ -30,7 +34,12 @@ export default function OrganizationSettingsPage() {
     const nextErrors: SettingsErrors = {};
     if (!settings.name.trim()) nextErrors.name = "Informe o nome da organização.";
     if (!settings.cnpj.trim()) nextErrors.cnpj = "Informe o CNPJ.";
-    if (!settings.address.trim()) nextErrors.address = "Informe o endereço.";
+    if (!settings.postalCode.trim()) nextErrors.postalCode = "Informe o CEP.";
+    if (!settings.street.trim()) nextErrors.street = "Informe o logradouro.";
+    if (!settings.addressNumber.trim()) nextErrors.addressNumber = "Informe o número.";
+    if (!settings.neighborhood.trim()) nextErrors.neighborhood = "Informe o bairro.";
+    if (!settings.city.trim()) nextErrors.city = "Informe a cidade.";
+    if (!settings.state) nextErrors.state = "Selecione o estado.";
     if (!members.some((member) => member.id === settings.responsibleUserId)) {
       nextErrors.responsibleUserId = "Selecione um usuário responsável.";
     }
@@ -43,7 +52,12 @@ export default function OrganizationSettingsPage() {
       ...current,
       name: current.name.trim(),
       cnpj: current.cnpj.trim(),
-      address: current.address.trim()
+      postalCode: current.postalCode.trim(),
+      street: current.street.trim(),
+      addressNumber: current.addressNumber.trim(),
+      complement: current.complement.trim(),
+      neighborhood: current.neighborhood.trim(),
+      city: current.city.trim()
     }));
     setShowSuccess(true);
   }
@@ -98,11 +112,42 @@ export default function OrganizationSettingsPage() {
                         {members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}
                       </FormSelect>
                     </Col>
-                    <Col xs={12}>
-                      <FormInput
-                        id="organizationAddress" label="Endereço" as="textarea" rows={2} value={settings.address}
-                        onChange={(event) => updateField("address", event.target.value)} error={errors.address} required
-                      />
+                    <Col md={4}>
+                      <FormInput id="organizationPostalCode" label="CEP" value={settings.postalCode} maxLength={9}
+                        placeholder="00000-000" onChange={(event) => updateField("postalCode", event.target.value)}
+                        error={errors.postalCode} required />
+                    </Col>
+                    <Col md={8}>
+                      <FormInput id="organizationStreet" label="Logradouro" value={settings.street}
+                        onChange={(event) => updateField("street", event.target.value)}
+                        error={errors.street} required />
+                    </Col>
+                    <Col md={3}>
+                      <FormInput id="organizationAddressNumber" label="Número" value={settings.addressNumber}
+                        onChange={(event) => updateField("addressNumber", event.target.value)}
+                        error={errors.addressNumber} required />
+                    </Col>
+                    <Col md={5}>
+                      <FormInput id="organizationComplement" label="Complemento" value={settings.complement}
+                        onChange={(event) => updateField("complement", event.target.value)} />
+                    </Col>
+                    <Col md={4}>
+                      <FormInput id="organizationNeighborhood" label="Bairro" value={settings.neighborhood}
+                        onChange={(event) => updateField("neighborhood", event.target.value)}
+                        error={errors.neighborhood} required />
+                    </Col>
+                    <Col md={8}>
+                      <FormInput id="organizationCity" label="Cidade" value={settings.city}
+                        onChange={(event) => updateField("city", event.target.value)}
+                        error={errors.city} required />
+                    </Col>
+                    <Col md={4}>
+                      <FormSelect id="organizationState" label="Estado" value={settings.state}
+                        onChange={(event) => updateField("state", event.target.value)}
+                        error={errors.state} required>
+                        <option value="">Selecione</option>
+                        {states.map((state) => <option key={state} value={state}>{state}</option>)}
+                      </FormSelect>
                     </Col>
                   </Row>
                   <div className="global-settings-divider" />
