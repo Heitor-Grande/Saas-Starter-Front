@@ -152,3 +152,113 @@ As interfaces devem ser genéricas, reutilizáveis, responsivas e manter a ident
 Ao final da Fase 2, o SaaS Starter deverá possuir uma área administrativa completa em termos de interface, permitindo navegar e interagir com os módulos de usuários, organizações, perfis, permissões e configurações.
 
 Todas as operações deverão funcionar de maneira demonstrativa, sem dependência de backend, mantendo a aplicação preparada para integrações futuras.
+
+## Fase 3 — Administração e configurações globais
+
+O objetivo desta fase é consolidar a estrutura administrativa do SaaS Starter, oferecendo interfaces centralizadas para gerenciamento, monitoramento e configuração da aplicação.
+
+O sistema terá **um único painel administrativo**, sem separação entre administradores da plataforma e administradores das organizações nesta etapa.
+
+### Estrutura de menus
+
+A sidebar deverá ser organizada em três grupos:
+
+**Visão Geral**
+- Dashboard Geral
+
+**Administração**
+- Usuários
+- Perfis e Permissões
+- Organizações
+- Planos e Assinaturas
+
+**Sistema**
+- Logs e Auditoria
+- Configurações Globais
+
+### Funcionalidades
+
+**1. Dashboard Geral**
+- Indicadores de usuários e organizações.
+- Resumo das atividades da aplicação.
+- Cards e gráficos demonstrativos.
+- Informações gerais sobre a utilização do sistema.
+
+**2. Usuários**
+- Cadastro, edição e listagem de usuários.
+- Ativação e desativação.
+- Associação a organizações e perfis de acesso.
+- Reutilização das interfaces desenvolvidas na Fase 2.
+
+**3. Perfis e Permissões**
+- Cadastro e gerenciamento de perfis.
+- Associação de permissões aos perfis.
+- Associação de perfis aos usuários.
+- Visualização das permissões por módulo e operação.
+- Reutilização das interfaces desenvolvidas na Fase 2.
+
+**4. Organizações**
+- Cadastro e gerenciamento de organizações.
+- Ativação e desativação de organizações.
+- Gerenciamento de membros.
+- Formulário de cadastro e edição organizado em abas:
+  - **Dados Gerais:** informações cadastrais da organização.
+  - **Membros:** usuários vinculados à organização.
+  - **Configuração:** parâmetros e preferências exclusivos da organização.
+- As configurações individuais de cada organização não devem ser incluídas no menu de Configurações Globais.
+- Reutilização das interfaces desenvolvidas na Fase 2.
+
+**5. Planos e Assinaturas**
+- Cadastro e edição de planos.
+- Definição de funcionalidades e limites por plano.
+- Listagem demonstrativa de assinaturas.
+- Visualização de status e informações dos planos.
+
+**6. Logs e Auditoria**
+- Histórico de atividades da aplicação.
+- Identificação do usuário responsável.
+- Data e horário das operações.
+- Identificação da organização relacionada.
+- Filtros por usuário, período, operação e organização.
+- Visualização detalhada dos registros.
+
+**7. Configurações Globais**
+
+Centralizar as configurações gerais aplicáveis a todas as organizações.
+
+Organizar as configurações em abas:
+
+- **Geral:** nome da aplicação e parâmetros globais.
+- **SMTP:** servidor, porta, remetente e configurações de envio de e-mails.
+
+As configurações globais devem permanecer separadas das configurações individuais de cada organização.
+
+### Diretrizes
+
+- Manter um único painel administrativo.
+- Organizar a sidebar em Visão Geral, Administração e Sistema.
+- Reutilizar as interfaces e componentes das fases anteriores.
+- Evitar duplicação dos módulos já desenvolvidos.
+- Utilizar React-Bootstrap como biblioteca padrão.
+- Manter a identidade visual personalizada, moderna e baseada em cores claras.
+- Centralizar personalizações compartilhadas no `cssGlobal.css`.
+- Garantir navegação funcional entre todos os menus.
+- Utilizar dados fictícios e simulações para representar as operações.
+
+### Restrições
+
+**A Fase 3 continuará sendo exclusivamente frontend.**
+
+- Não implementar backend ou integração com APIs.
+- Não utilizar banco de dados.
+- Não implementar autenticação ou permissões reais.
+- Não realizar envio real de e-mails.
+- Não armazenar credenciais SMTP reais.
+- Não implementar cobranças ou pagamentos reais.
+- Não implementar separação entre painéis administrativos.
+
+### Resultado esperado
+
+Ao final da Fase 3, o SaaS Starter deverá possuir uma interface administrativa completa e navegável, contemplando usuários, organizações, permissões, planos, auditoria e configurações globais.
+
+Todas as funcionalidades deverão operar de maneira demonstrativa, utilizando dados fictícios e sem dependência de backend.

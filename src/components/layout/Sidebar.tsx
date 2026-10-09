@@ -67,43 +67,57 @@ function SidebarNavItem({
 
   const content = (
     <>
-      <span>{item.label}</span>
+      <span className="sidebar-link-label">{item.label}</span>
       <small>{item.description}</small>
     </>
   );
 
-  const navTarget = item.href ? (
-    <Link
-      aria-current={item.href === pathname ? "page" : undefined}
-      className={className}
-      href={item.href}
-      onClick={onNavigate}
-    >
-      {content}
-    </Link>
-  ) : (
-    <div aria-current={active ? "true" : undefined} className={className}>
-      {content}
-    </div>
-  );
-
   return (
     <div className={`sidebar-item sidebar-item-level-${level}`}>
-      {hasChildren ? (
-        <div className="sidebar-link-shell">
-          {navTarget}
+      {hasChildren && item.href ? (
+        <div className="sidebar-row">
+          <Link
+            aria-current={item.href === pathname ? "page" : undefined}
+            className={className}
+            href={item.href}
+            onClick={onNavigate}
+          >
+            {content}
+          </Link>
           <button
             aria-expanded={open}
             aria-label={open ? `Fechar ${item.label}` : `Abrir ${item.label}`}
-            className="sidebar-toggle"
+            className="sidebar-inline-toggle"
             onClick={() => onToggle(item.id)}
             type="button"
           >
-            <span aria-hidden="true" />
+            <span className="sidebar-caret" aria-hidden="true" />
           </button>
         </div>
+      ) : hasChildren ? (
+        <button
+          aria-current={active ? "true" : undefined}
+          aria-expanded={open}
+          className={`${className} sidebar-disclosure`}
+          onClick={() => onToggle(item.id)}
+          type="button"
+        >
+          <span className="sidebar-link-copy">{content}</span>
+          <span className="sidebar-caret" aria-hidden="true" />
+        </button>
+      ) : item.href ? (
+        <Link
+          aria-current={item.href === pathname ? "page" : undefined}
+          className={className}
+          href={item.href}
+          onClick={onNavigate}
+        >
+          {content}
+        </Link>
       ) : (
-        navTarget
+        <div aria-current={active ? "true" : undefined} className={className}>
+          {content}
+        </div>
       )}
       {hasChildren && open && level < 3 ? (
         <div className="sidebar-children">

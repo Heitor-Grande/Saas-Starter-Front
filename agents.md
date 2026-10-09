@@ -91,6 +91,16 @@ Evite estilos inline e valores visuais repetidos desnecessariamente.
 
 ## Componentes
 
+### Componentes UI padrao
+
+- Utilize `src/components/ui/DataTable.tsx` como padrao para tabelas de dados. Estenda suas propriedades quando uma necessidade puder ser compartilhada; nao crie paginacao ou estrutura de tabela duplicada nas paginas.
+- Utilize `src/components/ui/FormInput.tsx`, `FormSelect.tsx` e `FormCheckbox.tsx` como padrao para campos de formulario.
+- Evite usar `Form.Control`, `Form.Select` e `Form.Check` diretamente nas paginas, salvo quando o componente compartilhado nao suportar um requisito especifico.
+- Preserve nos componentes de formulario os rotulos, textos auxiliares, mensagens de erro e atributos de acessibilidade.
+- Utilize `src/components/ui/Loading.tsx` como padrao visual durante todas as requisicoes de API. Escolha entre os modos `inline`, `section` e `overlay` conforme a area afetada pela requisicao.
+- Utilize `src/components/ui/FeedbackState.tsx` para comunicar sucesso ou erro ao usuario apos operacoes de API que alterem dados, como `POST`, `PUT`, `PATCH` e `DELETE`.
+- Evite utilizar `FeedbackState` em consultas `GET`. Para carregamento, erro ou ausencia de dados em operacoes de leitura, prefira `Loading` e estados inline que nao interrompam a navegacao do usuario.
+
 - Priorize componentes nativos do React-Bootstrap.
 - Não recrie componentes que a biblioteca já oferece sem justificativa.
 - Crie componentes compartilhados quando houver reutilização real.

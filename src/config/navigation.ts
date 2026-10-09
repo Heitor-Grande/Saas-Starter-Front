@@ -10,74 +10,36 @@ export type NavigationLink = NavigationItem & { href: string };
 
 export const mainNavigation: NavigationItem[] = [
   {
-    id: "product",
-    label: "Produto",
-    description: "Base operacional",
+    id: "overview",
+    label: "Visao Geral",
+    description: "Resumo administrativo",
     children: [
       {
-        id: "dashboard",
+        id: "general-dashboard",
         href: "/dashboard",
-        label: "Dashboard",
-        description: "Visao geral demonstrativa"
-      },
-      {
-        id: "workspace",
-        label: "Workspace",
-        description: "Conta e preferencias",
-        children: [
-          {
-            id: "profile",
-            href: "/perfil",
-            label: "Perfil",
-            description: "Dados do usuario simulado"
-          },
-          {
-            id: "settings",
-            href: "/configuracoes",
-            label: "Configuracoes",
-            description: "Preferencias do template"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: "foundation",
-    label: "Fundacao",
-    description: "Componentes e estados",
-    children: [
-      {
-        id: "components",
-        href: "/componentes",
-        label: "Componentes",
-        description: "Biblioteca reutilizavel"
-      },
-      {
-        id: "states",
-        href: "/estados",
-        label: "Estados",
-        description: "Loading, erro, vazio e sucesso"
+        label: "Dashboard Geral",
+        description: "Indicadores do sistema"
       }
     ]
   },
   {
     id: "administration",
     label: "Administracao",
-    description: "Fase 2",
+    description: "Gestao da aplicacao",
     children: [
       {
-        id: "access",
-        label: "Acessos",
-        description: "Usuarios e permissoes",
+        id: "users",
+        href: "/usuarios",
+        label: "Usuarios",
+        description: "Contas e acessos"
+      },
+      {
+        id: "profiles-permissions",
+        label: "Perfis e Permissoes",
+        description: "Papeis e matriz de acesso",
         children: [
           {
-            id: "users",
-            href: "/usuarios",
-            label: "Usuarios",
-            description: "Administracao de acessos"
-          },
-          {
-            id: "roles",
+            id: "profiles",
             href: "/perfis-acesso",
             label: "Perfis",
             description: "Papeis administrativos"
@@ -95,6 +57,31 @@ export const mainNavigation: NavigationItem[] = [
         href: "/organizacoes",
         label: "Organizacoes",
         description: "Workspaces e contas"
+      },
+      {
+        id: "plans-subscriptions",
+        href: "/planos-assinaturas",
+        label: "Planos e Assinaturas",
+        description: "Planos, limites e status"
+      }
+    ]
+  },
+  {
+    id: "system",
+    label: "Sistema",
+    description: "Operacao e parametros",
+    children: [
+      {
+        id: "audit-logs",
+        href: "/logs-auditoria",
+        label: "Logs e Auditoria",
+        description: "Historico de atividades"
+      },
+      {
+        id: "global-settings",
+        href: "/configuracoes-globais",
+        label: "Configuracoes Globais",
+        description: "Parametros da aplicacao"
       }
     ]
   }
