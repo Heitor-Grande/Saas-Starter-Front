@@ -14,7 +14,7 @@ export default function RecoverPasswordPage() {
   }
 
   return (
-    <main className="auth-shell">
+    <main className="auth-shell recover-auth-shell">
       <section className="auth-panel">
         <div className="auth-heading">
           <Link className="auth-brand" href="/">

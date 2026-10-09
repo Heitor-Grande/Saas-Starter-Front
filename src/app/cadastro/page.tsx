@@ -35,9 +35,20 @@ interface SignupUser {
   passwordConfirmation: string;
 }
 
+type PaymentMethod = "pix" | "credit-card";
+
+interface SignupPayment {
+  method: PaymentMethod;
+  cardNumber: string;
+  holderName: string;
+  expiry: string;
+  cvv: string;
+}
+
 type OrganizationField = keyof SignupOrganization;
 type UserField = Exclude<keyof SignupUser, "active">;
-type SignupErrors = Partial<Record<OrganizationField | UserField, string>>;
+type PaymentField = Exclude<keyof SignupPayment, "method">;
+type SignupErrors = Partial<Record<OrganizationField | UserField | PaymentField, string>>;
 
 const states = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
@@ -71,9 +82,18 @@ const initialUser: SignupUser = {
   passwordConfirmation: ""
 };
 
+const initialPayment: SignupPayment = {
+  method: "pix",
+  cardNumber: "",
+  holderName: "",
+  expiry: "",
+  cvv: ""
+};
+
 export default function SignupPage() {
   const [organization, setOrganization] = useState(initialOrganization);
   const [user, setUser] = useState(initialUser);
+  const [payment, setPayment] = useState(initialPayment);
   const [errors, setErrors] = useState<SignupErrors>({});
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -85,6 +105,24 @@ export default function SignupPage() {
   function updateUser(field: UserField, value: string) {
     setUser((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined }));
+  }
+
+  function updatePayment(field: PaymentField, value: string) {
+    setPayment((current) => ({ ...current, [field]: value }));
+    setErrors((current) => ({ ...current, [field]: undefined }));
+  }
+
+  function updatePaymentMethod(method: PaymentMethod) {
+    setPayment((current) => ({ ...current, method }));
+    if (method === "pix") {
+      setErrors((current) => ({
+        ...current,
+        cardNumber: undefined,
+        holderName: undefined,
+        expiry: undefined,
+        cvv: undefined
+      }));
+    }
   }
 
   function submitSignup(event: FormEvent<HTMLFormElement>) {
@@ -107,6 +145,12 @@ export default function SignupPage() {
     if (!user.password) nextErrors.password = "Informe uma senha.";
     if (user.password !== user.passwordConfirmation) {
       nextErrors.passwordConfirmation = "As senhas não coincidem.";
+    }
+    if (payment.method === "credit-card") {
+      if (!payment.cardNumber.trim()) nextErrors.cardNumber = "Informe o número do cartão.";
+      if (!payment.holderName.trim()) nextErrors.holderName = "Informe o nome do titular.";
+      if (!payment.expiry.trim()) nextErrors.expiry = "Informe a validade.";
+      if (!payment.cvv.trim()) nextErrors.cvv = "Informe o código de segurança.";
     }
 
     setErrors(nextErrors);
@@ -234,15 +278,6 @@ export default function SignupPage() {
             </div>
 
             <Row className="g-3">
-              <Col xs={12}>
-                <FormInput
-                  id="signupAvatar"
-                  label="Avatar"
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  helperText="Formatos aceitos: JPG, PNG ou WebP."
-                />
-              </Col>
               <Col md={6}>
                 <FormInput id="signupFullName" label="Nome completo" value={user.fullName}
                   onChange={(event) => updateUser("fullName", event.target.value)} error={errors.fullName} required />
@@ -300,6 +335,97 @@ export default function SignupPage() {
                   onChange={(event) => updateUser("passwordConfirmation", event.target.value)}
                   error={errors.passwordConfirmation} required />
               </Col>
+            </Row>
+          </section>
+
+          <hr className="signup-divider" />
+
+          <section className="signup-form-section" aria-labelledby="payment-section-title">
+            <div className="signup-section-heading">
+              <span>03</span>
+              <div>
+                <h2 id="payment-section-title">Método de pagamento</h2>
+                <p>Escolha como deseja realizar o pagamento da assinatura.</p>
+              </div>
+            </div>
+
+            <Row className="g-3">
+              <Col md={6}>
+                <FormSelect
+                  id="signupPaymentMethod"
+                  label="Forma de pagamento"
+                  value={payment.method}
+                  onChange={(event) => updatePaymentMethod(event.target.value as PaymentMethod)}
+                >
+                  <option value="pix">PIX</option>
+                  <option value="credit-card">Cartão de crédito</option>
+                </FormSelect>
+              </Col>
+
+              {payment.method === "pix" ? (
+                <Col xs={12}>
+                  <p className="signup-payment-note">
+                    Nenhuma outra informação é necessária para pagamento via PIX.
+                  </p>
+                </Col>
+              ) : (
+                <>
+                  <Col md={6}>
+                    <FormInput
+                      id="signupCardNumber"
+                      label="Número do cartão"
+                      value={payment.cardNumber}
+                      inputMode="numeric"
+                      autoComplete="cc-number"
+                      maxLength={19}
+                      placeholder="0000 0000 0000 0000"
+                      onChange={(event) => updatePayment("cardNumber", event.target.value)}
+                      error={errors.cardNumber}
+                      required
+                    />
+                  </Col>
+                  <Col md={6}>
+                    <FormInput
+                      id="signupCardHolder"
+                      label="Nome do titular"
+                      value={payment.holderName}
+                      autoComplete="cc-name"
+                      onChange={(event) => updatePayment("holderName", event.target.value)}
+                      error={errors.holderName}
+                      required
+                    />
+                  </Col>
+                  <Col md={3}>
+                    <FormInput
+                      id="signupCardExpiry"
+                      label="Validade"
+                      value={payment.expiry}
+                      inputMode="numeric"
+                      autoComplete="cc-exp"
+                      maxLength={5}
+                      placeholder="MM/AA"
+                      onChange={(event) => updatePayment("expiry", event.target.value)}
+                      error={errors.expiry}
+                      required
+                    />
+                  </Col>
+                  <Col md={3}>
+                    <FormInput
+                      id="signupCardCvv"
+                      label="Código de segurança (CVV)"
+                      type="password"
+                      value={payment.cvv}
+                      inputMode="numeric"
+                      autoComplete="cc-csc"
+                      maxLength={4}
+                      placeholder="000"
+                      onChange={(event) => updatePayment("cvv", event.target.value)}
+                      error={errors.cvv}
+                      required
+                    />
+                  </Col>
+                </>
+              )}
             </Row>
           </section>
         </div>
