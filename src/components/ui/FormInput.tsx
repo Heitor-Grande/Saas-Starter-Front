@@ -5,6 +5,7 @@ export interface FormInputProps extends Omit<FormControlProps, "id"> {
   label: string;
   helperText?: string;
   error?: string;
+  rows?: number;
 }
 
 export function FormInput({ id, label, helperText, error, ...controlProps }: FormInputProps) {

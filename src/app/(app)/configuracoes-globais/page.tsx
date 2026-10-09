@@ -26,19 +26,19 @@ export default function GlobalSettingsPage() {
 
   function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setFeedback(`Configuracoes de ${tabLabels[activeTab]} salvas na demonstracao.`);
+    setFeedback(`Configurações de ${tabLabels[activeTab]} salvas na demonstração.`);
   }
 
   function testSmtpConnection() {
-    setFeedback("Conexao SMTP simulada com sucesso. Nenhum dado foi enviado.");
+    setFeedback("Conexão SMTP simulada com sucesso. Nenhum dado foi enviado.");
   }
 
   return (
     <>
       <SectionHeader
         eyebrow="Sistema"
-        title="Configuracoes Globais"
-        description="Defina parametros compartilhados por toda a aplicacao e suas organizacoes."
+        title="Configurações Globais"
+        description="Defina parâmetros compartilhados por toda a aplicação e suas organizações."
       />
 
       <Tab.Container
@@ -74,23 +74,23 @@ export default function GlobalSettingsPage() {
               <Tab.Content>
                 <Tab.Pane eventKey="general">
                   <div className="global-settings-section-heading">
-                    <h2>Informacoes da aplicacao</h2>
-                    <p>Parametros usados como padrao em todas as organizacoes.</p>
+                    <h2>Informações da aplicação</h2>
+                    <p>Parâmetros usados como padrão em todas as organizações.</p>
                   </div>
                   <Row className="g-3">
                     <Col md={6}>
-                      <FormInput id="applicationName" label="Nome da aplicacao" defaultValue="SaaS Starter" required />
+                      <FormInput id="applicationName" label="Nome da aplicação" defaultValue="SaaS Starter" required />
                     </Col>
                     <Col md={6}>
-                      <FormInput id="supportEmail" label="Email de suporte" type="email" defaultValue="suporte@example.com" required />
+                      <FormInput id="supportEmail" label="E-mail de suporte" type="email" defaultValue="suporte@example.com" required />
                     </Col>
                   </Row>
                 </Tab.Pane>
 
                 <Tab.Pane eventKey="smtp">
                   <div className="global-settings-section-heading">
-                    <h2>Servidor de email</h2>
-                    <p>Use somente dados ficticios nesta demonstracao. Nenhuma mensagem sera enviada.</p>
+                    <h2>Servidor de e-mail</h2>
+                    <p>Use somente dados fictícios nesta demonstração. Nenhuma mensagem será enviada.</p>
                   </div>
                   <Row className="g-3">
                     <Col md={8}>
@@ -100,30 +100,30 @@ export default function GlobalSettingsPage() {
                       <FormInput id="smtpPort" label="Porta" type="text" defaultValue="587" required />
                     </Col>
                     <Col md={6}>
-                      <FormInput id="smtpUsername" label="Usuario" defaultValue="mailer@example.com" autoComplete="off" />
+                      <FormInput id="smtpUsername" label="Usuário" defaultValue="mailer@example.com" autoComplete="off" />
                     </Col>
                     <Col md={6}>
-                      <FormInput id="smtpPassword" label="Senha" type="password" placeholder="Nao armazenada nesta demonstracao" autoComplete="new-password" />
+                      <FormInput id="smtpPassword" label="Senha" type="password" placeholder="Não armazenada nesta demonstração" autoComplete="new-password" />
                     </Col>
                     <Col md={6}>
                       <FormInput id="senderName" label="Nome do remetente" defaultValue="SaaS Starter" />
                     </Col>
                     <Col md={6}>
-                      <FormInput id="senderEmail" label="Email do remetente" type="email" defaultValue="no-reply@example.com" />
+                      <FormInput id="senderEmail" label="E-mail do remetente" type="email" defaultValue="no-reply@example.com" />
                     </Col>
                   </Row>
                   <div className="global-settings-divider" />
                   <div className="global-settings-switches">
                     <FormCheckbox
                       id="smtpTls"
-                      label="Usar conexao segura (TLS)"
-                      description="Aplicar criptografia durante a comunicacao com o servidor SMTP."
+                      label="Usar conexão segura (TLS)"
+                      description="Aplicar criptografia durante a comunicação com o servidor SMTP."
                       type="switch"
                       defaultChecked
                     />
                   </div>
                   <Button type="button" variant="light" className="global-test-button" onClick={testSmtpConnection}>
-                    Testar conexao
+                    Testar conexão
                   </Button>
                 </Tab.Pane>
 
@@ -131,8 +131,8 @@ export default function GlobalSettingsPage() {
             </Card.Body>
 
             <div className="global-settings-actions">
-              <span>Alteracoes aplicadas globalmente.</span>
-              <Button type="submit" className="starter-button">Salvar configuracoes</Button>
+              <span>Alterações aplicadas globalmente.</span>
+              <Button type="submit" className="starter-button">Salvar configurações</Button>
             </div>
           </Form>
         </Card>

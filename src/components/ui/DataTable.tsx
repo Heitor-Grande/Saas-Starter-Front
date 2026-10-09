@@ -92,10 +92,10 @@ export function DataTable<T>({
 
       {pageCount > 1 && onPageChange ? (
         <div className="ui-data-table-pagination">
-          <span>Pagina {currentPage} de {pageCount}</span>
+          <span>Página {currentPage} de {pageCount}</span>
           <Pagination size="sm">
             <Pagination.Prev
-              aria-label="Pagina anterior"
+              aria-label="Página anterior"
               disabled={currentPage === 1}
               onClick={() => onPageChange(Math.max(1, currentPage - 1))}
             />
@@ -109,7 +109,7 @@ export function DataTable<T>({
               </Pagination.Item>
             ))}
             <Pagination.Next
-              aria-label="Proxima pagina"
+              aria-label="Próxima página"
               disabled={currentPage === pageCount}
               onClick={() => onPageChange(Math.min(pageCount, currentPage + 1))}
             />

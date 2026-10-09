@@ -21,7 +21,7 @@ export const auditLogs: AuditLog[] = [
     organization: "Workspace Alpha",
     occurredAt: "2026-10-08T14:32:00-03:00",
     action: "PUT",
-    resource: "Usuario / USR-204",
+    resource: "Usuário / USR-204",
     before: {
       id: "USR-204",
       nome: "Rafael Lima",
@@ -41,7 +41,7 @@ export const auditLogs: AuditLog[] = [
     organization: "Portal Sigma",
     occurredAt: "2026-10-08T11:18:00-03:00",
     action: "POST",
-    resource: "Organizacao / ORG-088",
+    resource: "Organização / ORG-088",
     before: null,
     after: {
       id: "ORG-088",
@@ -85,7 +85,7 @@ export const auditLogs: AuditLog[] = [
     organization: "Portal Sigma",
     occurredAt: "2026-10-06T16:21:00-03:00",
     action: "POST",
-    resource: "Usuario / USR-219",
+    resource: "Usuário / USR-219",
     before: null,
     after: {
       id: "USR-219",
@@ -101,7 +101,7 @@ export const auditLogs: AuditLog[] = [
     occurredAt: "2026-10-06T10:12:00-03:00",
     action: "DELETE",
     resource: "Token de acesso / TKN-055",
-    before: { id: "TKN-055", descricao: "Integracao de homologacao", ativo: true },
+    before: { id: "TKN-055", descricao: "Integração de homologação", ativo: true },
     after: null
   },
   {
@@ -110,7 +110,7 @@ export const auditLogs: AuditLog[] = [
     organization: "Hub Delta",
     occurredAt: "2026-10-05T15:40:00-03:00",
     action: "PUT",
-    resource: "Organizacao / ORG-021",
+    resource: "Organização / ORG-021",
     before: { id: "ORG-021", nome: "Hub Delta", plano: "Growth" },
     after: { id: "ORG-021", nome: "Hub Delta", plano: "Scale" }
   }

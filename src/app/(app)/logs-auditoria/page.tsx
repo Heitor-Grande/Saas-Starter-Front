@@ -3,13 +3,11 @@
 import { useMemo, useState } from "react";
 import { Badge, Button, Card, Col, Modal, Row } from "react-bootstrap";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import { FeedbackState } from "@/components/ui/FeedbackState";
 import { FormInput } from "@/components/ui/FormInput";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { auditLogs, type AuditAction, type AuditLog } from "@/mocks/auditLogs";
 
-const PAGE_SIZE = 5;
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
@@ -19,7 +17,7 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
 const auditColumns: DataTableColumn<AuditLog>[] = [
   {
     key: "user",
-    header: "Usuario que fez a acao",
+    header: "Usuário que fez a ação",
     render: (log) => (
       <>
         <strong>{log.user.name}</strong>
@@ -29,7 +27,7 @@ const auditColumns: DataTableColumn<AuditLog>[] = [
   },
   {
     key: "occurredAt",
-    header: "Data da acao",
+    header: "Data da ação",
     render: (log) => (
       <>
         <strong>{dateFormatter.format(new Date(log.occurredAt))}</strong>
@@ -39,7 +37,7 @@ const auditColumns: DataTableColumn<AuditLog>[] = [
   },
   {
     key: "action",
-    header: "Tipo da acao",
+    header: "Tipo da ação",
     render: (log) => (
       <span className={`audit-action audit-action-${log.action.toLowerCase()}`}>
         {log.action}
@@ -58,7 +56,7 @@ function JsonPanel({ label, value }: { label: string; value: AuditLog["before"] 
       {value ? (
         <pre>{JSON.stringify(value, null, 2)}</pre>
       ) : (
-        <div className="audit-json-empty">Nenhuma informacao registrada.</div>
+        <div className="audit-json-empty">Nenhuma informação registrada.</div>
       )}
     </div>
   );
@@ -104,11 +102,11 @@ export default function AuditLogsPage() {
   }
 
   return (
-    <>
+    <div className="audit-page">
       <SectionHeader
         eyebrow="Sistema"
         title="Logs e Auditoria"
-        description="Consulte alteracoes realizadas na aplicacao e compare os dados de cada operacao."
+        description="Consulte alterações realizadas na aplicação e compare os dados de cada operação."
       />
 
       <Card className="app-card audit-filter-card">
@@ -119,14 +117,14 @@ export default function AuditLogsPage() {
                 id="auditSearch"
                 label="Buscar"
                 value={query}
-                placeholder="Usuario, email ou recurso"
+                placeholder="Usuário, e-mail ou recurso"
                 onChange={(event) => updateFilter(() => setQuery(event.target.value))}
               />
             </Col>
             <Col lg={2} md={4}>
               <FormSelect
                 id="auditAction"
-                label="Operacao"
+                label="Operação"
                 value={action}
                 onChange={(event) =>
                   updateFilter(() => setAction(event.target.value as AuditAction | ""))
@@ -141,7 +139,7 @@ export default function AuditLogsPage() {
             <Col lg={3} md={5}>
               <FormSelect
                 id="auditOrganization"
-                label="Organizacao"
+                label="Organização"
                 value={organization}
                 onChange={(event) => updateFilter(() => setOrganization(event.target.value))}
               >
@@ -164,7 +162,7 @@ export default function AuditLogsPage() {
         <Card.Body>
           <div className="card-heading">
             <div>
-              <h2>Historico de operacoes</h2>
+              <h2>Histórico de operações</h2>
               <p className="audit-table-description">Selecione um registro para visualizar os detalhes.</p>
             </div>
             <Badge bg="light" text="dark">
@@ -178,7 +176,6 @@ export default function AuditLogsPage() {
             getRowKey={(log) => log.id}
             emptyMessage="Nenhum registro corresponde aos filtros selecionados."
             page={page}
-            pageSize={PAGE_SIZE}
             onPageChange={setPage}
             onRowClick={setSelectedLog}
           />
@@ -197,16 +194,16 @@ export default function AuditLogsPage() {
             <Modal.Header closeButton>
               <div>
                 <span className="audit-modal-id">{selectedLog.id}</span>
-                <Modal.Title>Detalhes da operacao</Modal.Title>
+                <Modal.Title>Detalhes da operação</Modal.Title>
               </div>
             </Modal.Header>
             <Modal.Body>
               <div className="audit-modal-summary">
-                <div><span>Usuario</span><strong>{selectedLog.user.name}</strong></div>
+                <div><span>Usuário</span><strong>{selectedLog.user.name}</strong></div>
                 <div><span>Data e hora</span><strong>{dateFormatter.format(new Date(selectedLog.occurredAt))}</strong></div>
-                <div><span>Operacao</span><strong>{selectedLog.action}</strong></div>
+                <div><span>Operação</span><strong>{selectedLog.action}</strong></div>
                 <div><span>Recurso</span><strong>{selectedLog.resource}</strong></div>
-                <div><span>Organizacao</span><strong>{selectedLog.organization}</strong></div>
+                <div><span>Organização</span><strong>{selectedLog.organization}</strong></div>
               </div>
               <div className="audit-comparison-grid">
                 <JsonPanel label="Antes" value={selectedLog.before} />
@@ -219,6 +216,6 @@ export default function AuditLogsPage() {
           </>
         ) : null}
       </Modal>
-    </>
+    </div>
   );
 }

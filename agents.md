@@ -100,6 +100,10 @@ Evite estilos inline e valores visuais repetidos desnecessariamente.
 - Utilize `src/components/ui/Loading.tsx` como padrao visual durante todas as requisicoes de API. Escolha entre os modos `inline`, `section` e `overlay` conforme a area afetada pela requisicao.
 - Utilize `src/components/ui/FeedbackState.tsx` para comunicar sucesso ou erro ao usuario apos operacoes de API que alterem dados, como `POST`, `PUT`, `PATCH` e `DELETE`.
 - Evite utilizar `FeedbackState` em consultas `GET`. Para carregamento, erro ou ausencia de dados em operacoes de leitura, prefira `Loading` e estados inline que nao interrompam a navegacao do usuario.
+- Evite scroll vertical nas `page.tsx`. Organize o conteudo para caber na area util com paginacao, abas, paineis compactos e modais, mantendo a tela limpa e amigavel.
+- Quando todo o conteudo nao puder ser exibido simultaneamente, preserve a pagina sem scroll e limite a rolagem a uma area interna claramente definida, sem esconder acoes essenciais.
+- Escreva todos os textos visíveis da interface em português correto, com acentuação, ortografia e pontuação revisadas antes de concluir a implementação.
+- Não remova acentos de títulos, rótulos, mensagens, descrições ou textos de acessibilidade. Identificadores técnicos, URLs e chaves de contratos podem permanecer em ASCII.
 
 - Priorize componentes nativos do React-Bootstrap.
 - Não recrie componentes que a biblioteca já oferece sem justificativa.

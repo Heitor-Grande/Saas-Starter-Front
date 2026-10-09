@@ -3,11 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  authNavigation,
-  mainNavigation,
-  type NavigationItem
-} from "@/config/navigation";
+import { Button } from "react-bootstrap";
+import { mainNavigation, type NavigationItem } from "@/config/navigation";
 
 interface SidebarNavItemProps {
   item: NavigationItem;
@@ -176,7 +173,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         <span aria-hidden="true">S</span>
         <strong>SaaS Starter</strong>
       </Link>
-      <nav aria-label="Navegacao principal">
+      <nav aria-label="Navegação principal">
         {mainNavigation.map((item) => (
           <SidebarNavItem
             item={item}
@@ -190,11 +187,12 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         ))}
       </nav>
       <div className="sidebar-auth">
-        {authNavigation.map((item) => (
-          <Link href={item.href} key={item.id} onClick={onNavigate}>
-            {item.label}
-          </Link>
-        ))}
+        <Link href="/usuarios" onClick={onNavigate}>
+          Meu usuário
+        </Link>
+        <Button className="starter-button" size="sm" href="/login" onClick={onNavigate}>
+          Sair
+        </Button>
       </div>
     </aside>
   );

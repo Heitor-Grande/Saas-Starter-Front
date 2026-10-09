@@ -11,7 +11,7 @@ export type NavigationLink = NavigationItem & { href: string };
 export const mainNavigation: NavigationItem[] = [
   {
     id: "overview",
-    label: "Visao Geral",
+    label: "Visão Geral",
     description: "Resumo administrativo",
     children: [
       {
@@ -24,30 +24,30 @@ export const mainNavigation: NavigationItem[] = [
   },
   {
     id: "administration",
-    label: "Administracao",
-    description: "Gestao da aplicacao",
+    label: "Administração",
+    description: "Gestão da aplicação",
     children: [
       {
         id: "users",
         href: "/usuarios",
-        label: "Usuarios",
+        label: "Usuários",
         description: "Contas e acessos"
       },
       {
         id: "profiles-permissions",
-        label: "Perfis e Permissoes",
-        description: "Papeis e matriz de acesso",
+        label: "Perfis e Permissões",
+        description: "Papéis e matriz de acesso",
         children: [
           {
             id: "profiles",
             href: "/perfis-acesso",
             label: "Perfis",
-            description: "Papeis administrativos"
+            description: "Papéis administrativos"
           },
           {
             id: "permissions",
             href: "/permissoes",
-            label: "Permissoes",
+            label: "Permissões",
             description: "Matriz de recursos"
           }
         ]
@@ -55,33 +55,33 @@ export const mainNavigation: NavigationItem[] = [
       {
         id: "organizations",
         href: "/organizacoes",
-        label: "Organizacoes",
+        label: "Organizações",
         description: "Workspaces e contas"
-      },
-      {
-        id: "plans-subscriptions",
-        href: "/planos-assinaturas",
-        label: "Planos e Assinaturas",
-        description: "Planos, limites e status"
       }
     ]
   },
   {
     id: "system",
     label: "Sistema",
-    description: "Operacao e parametros",
+    description: "Operação e parâmetros",
     children: [
       {
         id: "audit-logs",
         href: "/logs-auditoria",
         label: "Logs e Auditoria",
-        description: "Historico de atividades"
+        description: "Histórico de atividades"
       },
       {
         id: "global-settings",
         href: "/configuracoes-globais",
-        label: "Configuracoes Globais",
-        description: "Parametros da aplicacao"
+        label: "Configurações Globais",
+        description: "Parâmetros da aplicação"
+      },
+      {
+        id: "plans-subscriptions",
+        href: "/planos-assinaturas",
+        label: "Planos e Assinaturas",
+        description: "Planos de assinatura do usuário"
       }
     ]
   }
@@ -98,7 +98,7 @@ export const authNavigation: NavigationLink[] = [
     id: "signup",
     href: "/cadastro",
     label: "Cadastro",
-    description: "Criacao simulada"
+    description: "Criação simulada"
   },
   {
     id: "recover",

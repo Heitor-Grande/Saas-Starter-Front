@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 
 interface AppShellProps {
@@ -26,10 +25,17 @@ export function AppShell({ children }: AppShellProps) {
       />
       <Sidebar onNavigate={handleCloseSidebar} />
       <div className="app-main">
-        <Header
-          onMenuClick={() => setSidebarOpen((currentValue) => !currentValue)}
-          sidebarOpen={sidebarOpen}
-        />
+        <button
+          aria-expanded={sidebarOpen}
+          aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}
+          className="mobile-menu-button app-shell-menu-button"
+          onClick={() => setSidebarOpen((currentValue) => !currentValue)}
+          type="button"
+        >
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+        </button>
         <main className="app-content">{children}</main>
       </div>
     </div>
