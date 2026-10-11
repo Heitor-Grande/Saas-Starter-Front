@@ -9,6 +9,7 @@ import { FormInput } from "@/components/ui/FormInput";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { initialCurrentUser, type CurrentUser } from "@/mocks/currentUser";
+import { mascararCpf, mascararTelefone } from "@/util/mascaras";
 
 type EditableField = Exclude<keyof CurrentUser, "active">;
 type UserErrors = Partial<Record<EditableField, string>>;
@@ -121,7 +122,7 @@ export default function CurrentUserPage() {
                     </Col>
                     <Col md={6}>
                       <FormInput id="userCpf" label="CPF" value={user.cpf} maxLength={14}
-                        placeholder="000.000.000-00" onChange={(event) => updateField("cpf", event.target.value)} error={errors.cpf} required />
+                        placeholder="000.000.000-00" onChange={(event) => updateField("cpf", mascararCpf(event.target.value))} error={errors.cpf} required />
                     </Col>
                     <Col md={6}>
                       <FormInput id="userBirthDate" label="Data de nascimento" type="date" value={user.birthDate}
@@ -145,7 +146,7 @@ export default function CurrentUserPage() {
                     </Col>
                     <Col md={6}>
                       <FormInput id="userPhone" label="Telefone" type="tel" value={user.phone}
-                        placeholder="(00) 00000-0000" onChange={(event) => updateField("phone", event.target.value)} error={errors.phone} required />
+                        placeholder="(00) 00000-0000" onChange={(event) => updateField("phone", mascararTelefone(event.target.value))} error={errors.phone} required />
                     </Col>
                     <Col md={6}>
                       <FormInput id="userOrganization" label="Organização pertencente" value={user.organization}

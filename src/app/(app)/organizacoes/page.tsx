@@ -9,6 +9,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { organizationsWithMembers } from "@/mocks/organizationMembers";
 import { initialOrganizationSettings, type OrganizationSettings } from "@/mocks/organizationSettings";
+import { mascararCep, mascararCnpj } from "@/util/mascaras";
 
 type EditableField = Exclude<keyof OrganizationSettings, "active" | "plan">;
 type SettingsErrors = Partial<Record<EditableField, string>>;
@@ -96,7 +97,7 @@ export default function OrganizationSettingsPage() {
                       <FormInput
                         id="organizationCnpj" label="CNPJ" value={settings.cnpj} maxLength={18}
                         placeholder="00.000.000/0000-00"
-                        onChange={(event) => updateField("cnpj", event.target.value)} error={errors.cnpj} required
+                        onChange={(event) => updateField("cnpj", mascararCnpj(event.target.value))} error={errors.cnpj} required
                       />
                     </Col>
                     <Col md={6}>
@@ -114,7 +115,7 @@ export default function OrganizationSettingsPage() {
                     </Col>
                     <Col md={4}>
                       <FormInput id="organizationPostalCode" label="CEP" value={settings.postalCode} maxLength={9}
-                        placeholder="00000-000" onChange={(event) => updateField("postalCode", event.target.value)}
+                        placeholder="00000-000" onChange={(event) => updateField("postalCode", mascararCep(event.target.value))}
                         error={errors.postalCode} required />
                     </Col>
                     <Col md={8}>

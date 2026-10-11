@@ -2484,6 +2484,7 @@ a {
 
 .signup-auth-panel {
   display: flex;
+  position: relative;
   width: min(100%, 1520px);
   max-height: calc(100dvh - 2rem);
   min-height: 0;

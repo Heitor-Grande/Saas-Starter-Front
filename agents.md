@@ -32,7 +32,7 @@ src/
 ├── config/       # Configurações da aplicação
 ├── mocks/        # Dados fictícios
 ├── hooks/        # Hooks reutilizáveis
-├── lib/          # Funções auxiliares
+├── util/         # Funções auxiliares e integrações reutilizáveis
 ├── styles/       # Estilos complementares
 └── types/        # Tipagens compartilhadas
 ```
@@ -51,6 +51,7 @@ Crie diretórios apenas quando forem necessários.
 8. Evite abstrações prematuras e complexidade desnecessária.
 9. Não implemente funcionalidades fora do escopo solicitado.
 10. Preserve a possibilidade de reutilizar o template em diferentes produtos SaaS.
+11. Centralize máscaras de entrada em `src/util/mascaras.ts` e seus removedores em `src/util/removeMascaras.ts`; não crie ou replique máscaras nas páginas.
 
 ## Estilização
 

@@ -7,6 +7,7 @@ import { FeedbackState } from "@/components/ui/FeedbackState";
 import { FormInput } from "@/components/ui/FormInput";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { initialPlans, type Plan } from "@/mocks/plans";
+import { mascararValorMonetario } from "@/util/mascaras";
 
 const planColumns: DataTableColumn<Plan>[] = [
   {
@@ -165,7 +166,7 @@ export default function PlansSubscriptionsPage() {
                 value={price}
                 placeholder="Ex.: 99,90"
                 inputMode="decimal"
-                onChange={(event) => setPrice(event.target.value)}
+                onChange={(event) => setPrice(mascararValorMonetario(event.target.value))}
                 required
               />
               <FormInput

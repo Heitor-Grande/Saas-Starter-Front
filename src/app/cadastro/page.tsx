@@ -2,11 +2,30 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button, Col, Form, Row } from "react-bootstrap";
 import { FeedbackState } from "@/components/ui/FeedbackState";
 import { FormCheckbox } from "@/components/ui/FormCheckbox";
 import { FormInput } from "@/components/ui/FormInput";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Loading } from "@/components/ui/Loading";
+import { apiRequest } from "@/util/apiRequest";
+import {
+  mascararCep,
+  mascararCnpj,
+  mascararCpf,
+  mascararCvv,
+  mascararNumeroCartao,
+  mascararTelefone,
+  mascararValidadeCartao
+} from "@/util/mascaras";
+import {
+  removerMascaraCep,
+  removerMascaraCnpj,
+  removerMascaraCpf,
+  removerMascaraTelefone
+} from "@/util/removeMascaras";
+import { validarForcaSenha } from "@/util/validarForcaSenha";
 
 interface SignupOrganization {
   name: string;
@@ -50,6 +69,10 @@ type UserField = Exclude<keyof SignupUser, "active">;
 type PaymentField = Exclude<keyof SignupPayment, "method">;
 type SignupErrors = Partial<Record<OrganizationField | UserField | PaymentField, string>>;
 
+interface ApiResponse {
+  message: string;
+}
+
 const states = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
   "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
@@ -91,11 +114,14 @@ const initialPayment: SignupPayment = {
 };
 
 export default function SignupPage() {
+  const router = useRouter();
   const [organization, setOrganization] = useState(initialOrganization);
   const [user, setUser] = useState(initialUser);
   const [payment, setPayment] = useState(initialPayment);
   const [errors, setErrors] = useState<SignupErrors>({});
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [requestError, setRequestError] = useState("");
 
   function updateOrganization(field: OrganizationField, value: string) {
     setOrganization((current) => ({ ...current, [field]: value }));
@@ -125,7 +151,7 @@ export default function SignupPage() {
     }
   }
 
-  function submitSignup(event: FormEvent<HTMLFormElement>) {
+  async function submitSignup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors: SignupErrors = {};
 
@@ -142,7 +168,8 @@ export default function SignupPage() {
     if (!user.birthDate) nextErrors.birthDate = "Informe a data de nascimento.";
     if (!user.email.trim()) nextErrors.email = "Informe o e-mail.";
     if (!user.phone.trim()) nextErrors.phone = "Informe o telefone.";
-    if (!user.password) nextErrors.password = "Informe uma senha.";
+    const validacaoSenha = validarForcaSenha(user.password);
+    if (!validacaoSenha.valida) nextErrors.password = validacaoSenha.erros.join(" ");
     if (user.password !== user.passwordConfirmation) {
       nextErrors.passwordConfirmation = "As senhas não coincidem.";
     }
@@ -156,12 +183,67 @@ export default function SignupPage() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    setShowSuccess(true);
+    setRequestError("");
+    setIsSubmitting(true);
+
+    try {
+      const response = await apiRequest({
+        path: "/cadastro-inicial/create",
+        method: "POST",
+        body: {
+          organizacao: {
+            nome: organization.name.trim(),
+            cnpj: removerMascaraCnpj(organization.cnpj),
+            planoid: Number(organization.plan),
+            cep: removerMascaraCep(organization.postalCode),
+            logradouro: organization.street.trim(),
+            numero: organization.addressNumber.trim(),
+            complemento: organization.complement.trim() || undefined,
+            bairro: organization.neighborhood.trim(),
+            cidade: organization.city.trim(),
+            estado: organization.state
+          },
+          usuario: {
+            nome: user.fullName.trim(),
+            nomesocial: user.socialName.trim() || undefined,
+            cpf: removerMascaraCpf(user.cpf),
+            datanascimento: user.birthDate,
+            email: user.email.trim(),
+            telefone: removerMascaraTelefone(user.phone),
+            perfilid: Number(user.profile),
+            cargo: user.jobTitle.trim() || undefined,
+            ativo: user.active,
+            senha: user.password
+          }
+        }
+      });
+      const result = (await response.json().catch(() => null)) as ApiResponse | null;
+
+      if (!response.ok) {
+        throw new Error(result?.message ?? "Não foi possível concluir o cadastro. Tente novamente.");
+      }
+
+      setShowSuccess(true);
+    } catch (error) {
+      setRequestError(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível concluir o cadastro. Tente novamente."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <main className="auth-shell signup-auth-shell">
       <section className="auth-panel signup-auth-panel">
+        <Loading
+          visible={isSubmitting}
+          mode="overlay"
+          label="Criando conta"
+          description="Estamos cadastrando sua organização e usuário."
+        />
         <div className="auth-heading">
           <Link className="auth-brand" href="/">
             SaaS Starter
@@ -199,7 +281,7 @@ export default function SignupPage() {
                   value={organization.cnpj}
                   maxLength={18}
                   placeholder="00.000.000/0000-00"
-                  onChange={(event) => updateOrganization("cnpj", event.target.value)}
+                  onChange={(event) => updateOrganization("cnpj", mascararCnpj(event.target.value))}
                   error={errors.cnpj}
                   required
                 />
@@ -211,9 +293,9 @@ export default function SignupPage() {
                   value={organization.plan}
                   onChange={(event) => updateOrganization("plan", event.target.value)}
                 >
-                  <option>Starter</option>
-                  <option>Growth</option>
-                  <option>Scale</option>
+                  <option value="1">Starter</option>
+                  <option value="2">Growth</option>
+                  <option value="3">Scale</option>
                 </FormSelect>
               </Col>
               <Col md={6}>
@@ -228,7 +310,7 @@ export default function SignupPage() {
               <Col md={4}>
                 <FormInput id="signupOrganizationPostalCode" label="CEP" value={organization.postalCode}
                   maxLength={9} placeholder="00000-000"
-                  onChange={(event) => updateOrganization("postalCode", event.target.value)}
+                  onChange={(event) => updateOrganization("postalCode", mascararCep(event.target.value))}
                   error={errors.postalCode} required />
               </Col>
               <Col md={8}>
@@ -288,7 +370,7 @@ export default function SignupPage() {
               </Col>
               <Col md={6}>
                 <FormInput id="signupCpf" label="CPF" value={user.cpf} maxLength={14}
-                  placeholder="000.000.000-00" onChange={(event) => updateUser("cpf", event.target.value)}
+                  placeholder="000.000.000-00" onChange={(event) => updateUser("cpf", mascararCpf(event.target.value))}
                   error={errors.cpf} required />
               </Col>
               <Col md={6}>
@@ -301,7 +383,7 @@ export default function SignupPage() {
               </Col>
               <Col md={6}>
                 <FormInput id="signupPhone" label="Telefone" type="tel" value={user.phone}
-                  placeholder="(00) 00000-0000" onChange={(event) => updateUser("phone", event.target.value)}
+                  placeholder="(00) 00000-0000" onChange={(event) => updateUser("phone", mascararTelefone(event.target.value))}
                   error={errors.phone} required />
               </Col>
               <Col md={6}>
@@ -311,10 +393,10 @@ export default function SignupPage() {
               <Col md={6}>
                 <FormSelect id="signupProfile" label="Perfil" value={user.profile}
                   onChange={(event) => updateUser("profile", event.target.value)}>
-                  <option>Administrador</option>
-                  <option>Gestor</option>
-                  <option>Colaborador</option>
-                  <option>Leitor</option>
+                  <option value="1">Administrador</option>
+                  <option value="2">Gestor</option>
+                  <option value="3">Colaborador</option>
+                  <option value="4">Leitor</option>
                 </FormSelect>
               </Col>
               <Col md={6}>
@@ -379,7 +461,7 @@ export default function SignupPage() {
                       autoComplete="cc-number"
                       maxLength={19}
                       placeholder="0000 0000 0000 0000"
-                      onChange={(event) => updatePayment("cardNumber", event.target.value)}
+                      onChange={(event) => updatePayment("cardNumber", mascararNumeroCartao(event.target.value))}
                       error={errors.cardNumber}
                       required
                     />
@@ -404,7 +486,7 @@ export default function SignupPage() {
                       autoComplete="cc-exp"
                       maxLength={5}
                       placeholder="MM/AA"
-                      onChange={(event) => updatePayment("expiry", event.target.value)}
+                      onChange={(event) => updatePayment("expiry", mascararValidadeCartao(event.target.value))}
                       error={errors.expiry}
                       required
                     />
@@ -419,7 +501,7 @@ export default function SignupPage() {
                       autoComplete="cc-csc"
                       maxLength={4}
                       placeholder="000"
-                      onChange={(event) => updatePayment("cvv", event.target.value)}
+                      onChange={(event) => updatePayment("cvv", mascararCvv(event.target.value))}
                       error={errors.cvv}
                       required
                     />
@@ -432,16 +514,28 @@ export default function SignupPage() {
 
         <div className="signup-form-actions">
           <Link href="/login">Já tenho uma conta</Link>
-          <Button className="starter-button" type="submit">Criar conta</Button>
+          <Button className="starter-button" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Criando conta..." : "Criar conta"}
+          </Button>
         </div>
       </Form>
 
       <FeedbackState
         show={showSuccess}
-        onClose={() => setShowSuccess(false)}
+        onClose={() => {
+          setShowSuccess(false);
+          router.push("/login");
+        }}
         variant="success"
         title="Cadastro concluído"
         description="A organização e o usuário responsável foram cadastrados com sucesso."
+      />
+      <FeedbackState
+        show={Boolean(requestError)}
+        onClose={() => setRequestError("")}
+        variant="error"
+        title="Não foi possível concluir o cadastro"
+        description={requestError}
       />
       </section>
     </main>
