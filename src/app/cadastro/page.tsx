@@ -81,7 +81,7 @@ const states = [
 const initialOrganization: SignupOrganization = {
   name: "",
   cnpj: "",
-  plan: "Starter",
+  plan: "1",
   postalCode: "",
   street: "",
   addressNumber: "",
@@ -99,7 +99,7 @@ const initialUser: SignupUser = {
   email: "",
   phone: "",
   active: true,
-  profile: "Administrador",
+  profile: "1",
   jobTitle: "",
   password: "",
   passwordConfirmation: ""
