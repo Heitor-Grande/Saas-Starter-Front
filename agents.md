@@ -25,10 +25,12 @@ Utilize a seguinte estrutura como referência:
 ```text
 src/
 ├── app/          # Rotas, páginas e layouts
+│   └── rota/
+│       ├── components/ # Componentes usados exclusivamente pela página da rota
+│       └── page.tsx
 ├── components/
 │   ├── ui/       # Componentes reutilizáveis
 │   └── layout/   # Sidebar, header e layouts
-├── features/     # Componentes específicos de funcionalidades
 ├── config/       # Configurações da aplicação
 ├── mocks/        # Dados fictícios
 ├── hooks/        # Hooks reutilizáveis
@@ -52,6 +54,7 @@ Crie diretórios apenas quando forem necessários.
 9. Não implemente funcionalidades fora do escopo solicitado.
 10. Preserve a possibilidade de reutilizar o template em diferentes produtos SaaS.
 11. Centralize máscaras de entrada em `src/util/mascaras.ts` e seus removedores em `src/util/removeMascaras.ts`; não crie ou replique máscaras nas páginas.
+12. Não utilize a pasta `src/features`. Quando uma `page.tsx` precisar de um componente específico, crie uma pasta `components` no mesmo diretório da página. Mantenha em `src/components` apenas componentes compartilhados entre diferentes páginas.
 
 ## Estilização
 
