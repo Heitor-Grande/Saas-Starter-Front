@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "react-bootstrap";
 import { mainNavigation, type NavigationItem } from "@/config/navigation";
+import { clearCookies } from "@/util/clearCookies";
 
 interface SidebarNavItemProps {
   item: NavigationItem;
@@ -167,6 +168,11 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     });
   }
 
+  function handleLogout() {
+    clearCookies();
+    onNavigate();
+  }
+
   return (
     <aside className="app-sidebar">
       <Link className="app-brand" href="/" onClick={onNavigate}>
@@ -195,7 +201,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         >
           Meu usuário
         </Link>
-        <Button className="starter-button" size="sm" href="/login" onClick={onNavigate}>
+        <Button className="starter-button" size="sm" href="/login" onClick={handleLogout}>
           Sair
         </Button>
       </div>
