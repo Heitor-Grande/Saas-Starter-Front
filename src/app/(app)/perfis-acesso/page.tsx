@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Alert, Badge, Button, Card, Form, Modal } from "react-bootstrap";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { FeedbackState } from "@/components/ui/FeedbackState";
+import { FormCheckbox } from "@/components/ui/FormCheckbox";
 import { FormInput } from "@/components/ui/FormInput";
 import { Loading } from "@/components/ui/Loading";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -11,6 +12,13 @@ import { apiRequest } from "@/util/apiRequest";
 import { getTokenCookie } from "@/util/getTokenCookie";
 
 interface PerfilApi {
+  id: number;
+  nome: string;
+  descricao: string;
+  permissoesids?: number[];
+}
+
+interface PermissaoApi {
   id: number;
   nome: string;
   descricao: string;
@@ -25,13 +33,29 @@ interface Profile {
   id: number;
   name: string;
   description: string;
+  permissionIds: number[];
+}
+
+interface Permission {
+  id: number;
+  name: string;
+  description: string;
 }
 
 function mapProfile(profile: PerfilApi): Profile {
   return {
     id: profile.id,
     name: profile.nome,
-    description: profile.descricao
+    description: profile.descricao,
+    permissionIds: profile.permissoesids ?? []
+  };
+}
+
+function mapPermission(permission: PermissaoApi): Permission {
+  return {
+    id: permission.id,
+    name: permission.nome,
+    description: permission.descricao
   };
 }
 
@@ -42,6 +66,7 @@ const columns: DataTableColumn<Profile>[] = [
 
 export default function AccessProfilesPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [availablePermissions, setAvailablePermissions] = useState<Permission[]>([]);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +79,8 @@ export default function AccessProfilesPage() {
   const [profileError, setProfileError] = useState("");
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [originalPermissionIds, setOriginalPermissionIds] = useState<number[]>([]);
+  const [editPermissionIds, setEditPermissionIds] = useState<number[]>([]);
   const [editErrors, setEditErrors] = useState<{ name?: string; description?: string }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -64,6 +91,7 @@ export default function AccessProfilesPage() {
   const [createError, setCreateError] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [createPermissionIds, setCreatePermissionIds] = useState<number[]>([]);
   const [errors, setErrors] = useState<{ name?: string; description?: string }>({});
 
   useEffect(() => {
@@ -79,23 +107,34 @@ export default function AccessProfilesPage() {
           throw new Error("Sua sessão não foi encontrada. Entre novamente na conta.");
         }
 
-        const response = await apiRequest({
-          path: "/perfis/findAll",
-          method: "GET",
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const result = (await response.json().catch(() => null)) as ApiResponse<PerfilApi[]> | null;
+        const [profilesResponse, permissionsResponse] = await Promise.all([
+          apiRequest({
+            path: "/perfis/findAll",
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          apiRequest({
+            path: "/permissoes/findAll",
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        ]);
+        const profilesResult = (await profilesResponse.json().catch(() => null)) as ApiResponse<PerfilApi[]> | null;
+        const permissionsResult = (await permissionsResponse.json().catch(() => null)) as ApiResponse<PermissaoApi[]> | null;
 
-        if (!response.ok) {
-          throw new Error(result?.message || "Não foi possível consultar os perfis.");
+        if (!profilesResponse.ok) {
+          throw new Error(profilesResult?.message || "Não foi possível consultar os perfis.");
         }
-
-        if (!Array.isArray(result?.data)) {
+        if (!permissionsResponse.ok) {
+          throw new Error(permissionsResult?.message || "Não foi possível consultar as permissões.");
+        }
+        if (!Array.isArray(profilesResult?.data) || !Array.isArray(permissionsResult?.data)) {
           throw new Error("A resposta da consulta de perfis é inválida.");
         }
 
         if (isActive) {
-          setProfiles(result.data.map(mapProfile));
+          setProfiles(profilesResult.data.map(mapProfile));
+          setAvailablePermissions(permissionsResult.data.map(mapPermission));
         }
       } catch (error) {
         if (isActive) {
@@ -148,6 +187,8 @@ export default function AccessProfilesPage() {
       setSelectedProfile(loadedProfile);
       setEditName(loadedProfile.name);
       setEditDescription(loadedProfile.description);
+      setOriginalPermissionIds(loadedProfile.permissionIds);
+      setEditPermissionIds(loadedProfile.permissionIds);
     } catch (error) {
       setProfileError(
         error instanceof Error
@@ -165,6 +206,8 @@ export default function AccessProfilesPage() {
     setProfileError("");
     setEditName("");
     setEditDescription("");
+    setOriginalPermissionIds([]);
+    setEditPermissionIds([]);
     setEditErrors({});
     setShowDeleteConfirmation(false);
   }
@@ -216,6 +259,40 @@ export default function AccessProfilesPage() {
 
       if (!response.ok) {
         throw new Error(result?.message || "Não foi possível atualizar o perfil.");
+      }
+
+      const permissionIdsToAssociate = editPermissionIds.filter(
+        (permissionId) => !originalPermissionIds.includes(permissionId)
+      );
+      const permissionIdsToRemove = originalPermissionIds.filter(
+        (permissionId) => !editPermissionIds.includes(permissionId)
+      );
+
+      if (permissionIdsToAssociate.length > 0) {
+        const associationResponse = await apiRequest({
+          path: `/perfis/associate-permissions/${selectedProfile.id}`,
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: { permissoesIds: permissionIdsToAssociate }
+        });
+        const associationResult = (await associationResponse.json().catch(() => null)) as ApiResponse<unknown> | null;
+
+        if (!associationResponse.ok) {
+          throw new Error(associationResult?.message || "Não foi possível associar as permissões ao perfil.");
+        }
+      }
+
+      for (const permissionId of permissionIdsToRemove) {
+        const removalResponse = await apiRequest({
+          path: `/perfis/remove-permission/${selectedProfile.id}/permissoes/${permissionId}`,
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const removalResult = (await removalResponse.json().catch(() => null)) as ApiResponse<unknown> | null;
+
+        if (!removalResponse.ok) {
+          throw new Error(removalResult?.message || "Não foi possível remover uma permissão do perfil.");
+        }
       }
 
       closeDetails();
@@ -285,6 +362,7 @@ export default function AccessProfilesPage() {
     setShowCreate(false);
     setName("");
     setDescription("");
+    setCreatePermissionIds([]);
     setErrors({});
   }
 
@@ -327,10 +405,29 @@ export default function AccessProfilesPage() {
           descricao: trimmedDescription
         }
       });
-      const result = (await response.json().catch(() => null)) as ApiResponse<unknown> | null;
+      const result = (await response.json().catch(() => null)) as ApiResponse<PerfilApi> | null;
 
       if (!response.ok) {
         throw new Error(result?.message || "Não foi possível criar o perfil.");
+      }
+      if (!result?.data?.id) {
+        throw new Error("A API não retornou o perfil criado.");
+      }
+
+      if (createPermissionIds.length > 0) {
+        const associationResponse = await apiRequest({
+          path: `/perfis/associate-permissions/${result.data.id}`,
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: { permissoesIds: createPermissionIds }
+        });
+        const associationResult = (await associationResponse.json().catch(() => null)) as ApiResponse<unknown> | null;
+
+        if (!associationResponse.ok) {
+          throw new Error(
+            associationResult?.message || "O perfil foi criado, mas não foi possível associar as permissões."
+          );
+        }
       }
 
       setPage(1);
@@ -438,6 +535,29 @@ export default function AccessProfilesPage() {
                 onChange={(event) => setDescription(event.target.value)} error={errors.description} required
               />
             </div>
+            <section className="mt-4" aria-labelledby="create-profile-permissions-title">
+              <h3 id="create-profile-permissions-title" className="h6">Permissões</h3>
+              {availablePermissions.length > 0 ? (
+                <div className="profile-permissions">
+                  {availablePermissions.map((permission) => (
+                    <FormCheckbox
+                      key={permission.id}
+                      id={`create-profile-permission-${permission.id}`}
+                      label={permission.name}
+                      description={permission.description}
+                      checked={createPermissionIds.includes(permission.id)}
+                      onChange={(event) => setCreatePermissionIds((current) =>
+                        event.target.checked
+                          ? [...current, permission.id]
+                          : current.filter((permissionId) => permissionId !== permission.id)
+                      )}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <Alert variant="light" className="mb-0">Nenhuma permissão cadastrada.</Alert>
+              )}
+            </section>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="light" onClick={closeCreate} disabled={isCreating}>Cancelar</Button>
@@ -471,28 +591,53 @@ export default function AccessProfilesPage() {
             ) : profileError ? (
               <Alert variant="danger" className="mb-0">{profileError}</Alert>
             ) : selectedProfile ? (
-              <div className="profiles-form-grid">
-                <FormInput
-                  id="editProfileName"
-                  label="Nome do perfil"
-                  value={editName}
-                  onChange={(event) => setEditName(event.target.value)}
-                  error={editErrors.name}
-                  maxLength={50}
-                  required
-                />
-                <FormInput
-                  id="editProfileDescription"
-                  label="Descrição"
-                  as="textarea"
-                  rows={4}
-                  value={editDescription}
-                  onChange={(event) => setEditDescription(event.target.value)}
-                  error={editErrors.description}
-                  maxLength={100}
-                  required
-                />
-              </div>
+              <>
+                <div className="profiles-form-grid">
+                  <FormInput
+                    id="editProfileName"
+                    label="Nome do perfil"
+                    value={editName}
+                    onChange={(event) => setEditName(event.target.value)}
+                    error={editErrors.name}
+                    maxLength={50}
+                    required
+                  />
+                  <FormInput
+                    id="editProfileDescription"
+                    label="Descrição"
+                    as="textarea"
+                    rows={4}
+                    value={editDescription}
+                    onChange={(event) => setEditDescription(event.target.value)}
+                    error={editErrors.description}
+                    maxLength={100}
+                    required
+                  />
+                </div>
+                <section className="mt-4" aria-labelledby="edit-profile-permissions-title">
+                  <h3 id="edit-profile-permissions-title" className="h6">Permissões</h3>
+                  {availablePermissions.length > 0 ? (
+                    <div className="profile-permissions">
+                      {availablePermissions.map((permission) => (
+                        <FormCheckbox
+                          key={permission.id}
+                          id={`edit-profile-permission-${permission.id}`}
+                          label={permission.name}
+                          description={permission.description}
+                          checked={editPermissionIds.includes(permission.id)}
+                          onChange={(event) => setEditPermissionIds((current) =>
+                            event.target.checked
+                              ? [...current, permission.id]
+                              : current.filter((permissionId) => permissionId !== permission.id)
+                          )}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <Alert variant="light" className="mb-0">Nenhuma permissão cadastrada.</Alert>
+                  )}
+                </section>
+              </>
             ) : null}
           </Modal.Body>
           {selectedProfile && !isLoadingProfile && !profileError ? (

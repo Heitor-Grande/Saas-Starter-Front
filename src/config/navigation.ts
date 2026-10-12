@@ -70,6 +70,12 @@ export const mainNavigation: NavigationItem[] = [
         description: "Papéis administrativos"
       },
       {
+        id: "permissions",
+        href: "/permissoes",
+        label: "Permissões",
+        description: "Permissões de acesso"
+      },
+      {
         id: "organizacoes-e-usuarios",
         href: "/organizacoes-usuarios",
         label: "Organizações e Usuários",
