@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { Alert, Badge, Button, Card, Form, Modal } from "react-bootstrap";
+import { Alert, Badge, Button, Card, Form, Modal, Tab, Tabs } from "react-bootstrap";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { FeedbackState } from "@/components/ui/FeedbackState";
 import { FormCheckbox } from "@/components/ui/FormCheckbox";
@@ -74,6 +74,7 @@ export default function AccessProfilesPage() {
   const [reloadKey, setReloadKey] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [activeDetailsTab, setActiveDetailsTab] = useState("general");
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [profileError, setProfileError] = useState("");
@@ -157,6 +158,7 @@ export default function AccessProfilesPage() {
   }, [reloadKey]);
 
   async function loadProfile(profile: Profile) {
+    setActiveDetailsTab("general");
     setShowDetails(true);
     setSelectedProfile(null);
     setProfileError("");
@@ -238,7 +240,10 @@ export default function AccessProfilesPage() {
     }
 
     setEditErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (Object.keys(nextErrors).length > 0) {
+      setActiveDetailsTab("general");
+      return;
+    }
 
     setProfileMutationError("");
     setIsSaving(true);
@@ -591,31 +596,37 @@ export default function AccessProfilesPage() {
             ) : profileError ? (
               <Alert variant="danger" className="mb-0">{profileError}</Alert>
             ) : selectedProfile ? (
-              <>
-                <div className="profiles-form-grid">
-                  <FormInput
-                    id="editProfileName"
-                    label="Nome do perfil"
-                    value={editName}
-                    onChange={(event) => setEditName(event.target.value)}
-                    error={editErrors.name}
-                    maxLength={50}
-                    required
-                  />
-                  <FormInput
-                    id="editProfileDescription"
-                    label="Descrição"
-                    as="textarea"
-                    rows={4}
-                    value={editDescription}
-                    onChange={(event) => setEditDescription(event.target.value)}
-                    error={editErrors.description}
-                    maxLength={100}
-                    required
-                  />
-                </div>
-                <section className="mt-4" aria-labelledby="edit-profile-permissions-title">
-                  <h3 id="edit-profile-permissions-title" className="h6">Permissões</h3>
+              <Tabs
+                id="profile-details-tabs"
+                activeKey={activeDetailsTab}
+                onSelect={(key) => setActiveDetailsTab(key ?? "general")}
+                className="global-settings-tabs mb-4"
+              >
+                <Tab eventKey="general" title="Informações Gerais">
+                  <div className="profiles-form-grid">
+                    <FormInput
+                      id="editProfileName"
+                      label="Nome do perfil"
+                      value={editName}
+                      onChange={(event) => setEditName(event.target.value)}
+                      error={editErrors.name}
+                      maxLength={50}
+                      required
+                    />
+                    <FormInput
+                      id="editProfileDescription"
+                      label="Descrição"
+                      as="textarea"
+                      rows={4}
+                      value={editDescription}
+                      onChange={(event) => setEditDescription(event.target.value)}
+                      error={editErrors.description}
+                      maxLength={100}
+                      required
+                    />
+                  </div>
+                </Tab>
+                <Tab eventKey="permissions" title="Permissões">
                   {availablePermissions.length > 0 ? (
                     <div className="profile-permissions">
                       {availablePermissions.map((permission) => (
@@ -636,8 +647,8 @@ export default function AccessProfilesPage() {
                   ) : (
                     <Alert variant="light" className="mb-0">Nenhuma permissão cadastrada.</Alert>
                   )}
-                </section>
-              </>
+                </Tab>
+              </Tabs>
             ) : null}
           </Modal.Body>
           {selectedProfile && !isLoadingProfile && !profileError ? (

@@ -3,31 +3,48 @@ export interface NavigationItem {
   href?: string;
   label: string;
   description: string;
+  permissao:
+    | "AcessoDashboardGeral"
+    | "AcessoMinhaOrganização"
+    | "VisualizarOrganização"
+    | "VisualizarUsuarios"
+    | "AcessoSistema"
+    | "VisualizaDashboardAdmin"
+    | "VisualizaLogsAuditoria"
+    | "VisualizaConfigGlobal"
+    | "VisualizaPerfis"
+    | "VisualizaPlanosAssinaturas"
+    | "VisualizaPermissões"
+    | "VisualizaOrganizaçãoUsuario";
   children?: NavigationItem[];
 }
 
-export type NavigationLink = NavigationItem & { href: string };
+export type NavigationLink = Omit<NavigationItem, "permissao"> & { href: string };
 
 export const mainNavigation: NavigationItem[] = [
   {
     id: "general-dashboard",
+    permissao: "AcessoDashboardGeral",
     href: "/dashboard",
     label: "Dashboard Geral",
     description: "Indicadores"
   },
   {
     id: "my-organization",
+    permissao: "AcessoMinhaOrganização",
     label: "Minha Organização",
     description: "Dados e membros da organização",
     children: [
       {
         id: "organizations",
+        permissao: "VisualizarOrganização",
         href: "/organizacoes",
         label: "Organização",
         description: "Dados da minha organização"
       },
       {
         id: "users",
+        permissao: "VisualizarUsuarios",
         href: "/usuarios",
         label: "Usuários",
         description: "Lista de todos os usuários da organização"
@@ -36,47 +53,55 @@ export const mainNavigation: NavigationItem[] = [
   },
   {
     id: "system",
+    permissao: "AcessoSistema",
     label: "Sistema",
     description: "Operação e parâmetros",
     children: [
       {
         id: "general-admin-dashboard",
+        permissao: "VisualizaDashboardAdmin",
         href: "/dashboardadmin",
         label: "Dashboard Admin",
         description: "Indicadores da aplicação"
       },
       {
         id: "audit-logs",
+        permissao: "VisualizaLogsAuditoria",
         href: "/logs-auditoria",
         label: "Logs e Auditoria",
         description: "Histórico de atividades"
       },
       {
         id: "global-settings",
+        permissao: "VisualizaConfigGlobal",
         href: "/configuracoes-globais",
         label: "Configurações Globais",
         description: "Parâmetros da aplicação"
       },
       {
         id: "plans-subscriptions",
+        permissao: "VisualizaPlanosAssinaturas",
         href: "/planos-assinaturas",
         label: "Planos e Assinaturas",
         description: "Planos de assinatura do usuário"
       },
       {
         id: "profiles",
+        permissao: "VisualizaPerfis",
         href: "/perfis-acesso",
         label: "Perfis",
         description: "Papéis administrativos"
       },
       {
         id: "permissions",
+        permissao: "VisualizaPermissões",
         href: "/permissoes",
         label: "Permissões",
         description: "Permissões de acesso"
       },
       {
         id: "organizacoes-e-usuarios",
+        permissao: "VisualizaOrganizaçãoUsuario",
         href: "/organizacoes-usuarios",
         label: "Organizações e Usuários",
         description: "Gerenciamento de organizações e usuários"

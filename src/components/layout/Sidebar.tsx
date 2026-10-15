@@ -2,10 +2,30 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "react-bootstrap";
+import { FeedbackState } from "@/components/ui/FeedbackState";
 import { mainNavigation, type NavigationItem } from "@/config/navigation";
+import { apiRequest } from "@/util/apiRequest";
 import { clearCookies } from "@/util/clearCookies";
+import { getTokenCookie } from "@/util/getTokenCookie";
+
+interface PermissaoUsuarioApi {
+  permissão: string;
+  temacesso: boolean;
+}
+
+interface ApiResponse<T> {
+  message?: string;
+  data?: T;
+}
+
+class ApiRequestError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = "ApiRequestError";
+  }
+}
 
 interface SidebarNavItemProps {
   item: NavigationItem;
@@ -18,6 +38,27 @@ interface SidebarNavItemProps {
 
 interface SidebarProps {
   onNavigate: () => void;
+}
+
+function filterNavigationByPermissions(
+  items: NavigationItem[],
+  allowedPermissions: Set<string>
+): NavigationItem[] {
+  return items.flatMap((item) => {
+    if (!allowedPermissions.has(item.permissao)) {
+      return [];
+    }
+
+    const children = item.children
+      ? filterNavigationByPermissions(item.children, allowedPermissions)
+      : undefined;
+
+    if (item.children && children?.length === 0) {
+      return [];
+    }
+
+    return [{ ...item, children }];
+  });
 }
 
 function isItemActive(item: NavigationItem, pathname: string): boolean {
@@ -138,11 +179,71 @@ function SidebarNavItem({
 
 export function Sidebar({ onNavigate }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [allowedPermissions, setAllowedPermissions] = useState<Set<string>>(new Set());
+  const [authorizationError, setAuthorizationError] = useState("");
+  const filteredNavigation = useMemo(
+    () => filterNavigationByPermissions(mainNavigation, allowedPermissions),
+    [allowedPermissions]
+  );
   const activeBranchIds = useMemo(
-    () => collectActiveBranchIds(mainNavigation, pathname),
-    [pathname]
+    () => collectActiveBranchIds(filteredNavigation, pathname),
+    [filteredNavigation, pathname]
   );
   const [openIds, setOpenIds] = useState<Set<string>>(() => activeBranchIds);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadPermissions() {
+      const token = getTokenCookie();
+
+      if (!token) {
+        if (isActive) setAllowedPermissions(new Set());
+        setAuthorizationError("Não foi possível carregar as permissões do usuário. Por favor, faça login novamente.");
+        return;
+      }
+
+      try {
+        const response = await apiRequest({
+          path: "/carrega-permissoes-usuario",
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const result = (await response.json().catch(() => null)) as ApiResponse<PermissaoUsuarioApi[]> | null;
+
+        if (!response.ok) {
+          throw new ApiRequestError(
+            result?.message || "Não foi possível carregar as permissões do usuário.",
+            response.status
+          );
+        }
+
+        if (!Array.isArray(result?.data)) {
+          throw new Error("Não foi possível carregar as permissões do usuário.");
+        }
+
+        if (isActive) {
+          setAllowedPermissions(new Set(
+            result.data
+              .filter((permission) => permission.temacesso === true)
+              .map((permission) => permission.permissão)
+          ));
+        }
+      } catch (error) {
+        if (!isActive) return;
+
+        setAllowedPermissions(new Set());
+        setAuthorizationError(error instanceof Error ? error.message : "Algo inesperado aconteceu ao carregar as permissões.");
+      }
+    }
+
+    void loadPermissions();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   useEffect(() => {
     setOpenIds((currentOpenIds) => {
@@ -173,6 +274,13 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     onNavigate();
   }
 
+  function handleAuthorizationErrorClose() {
+    setAuthorizationError("");
+    clearCookies();
+    onNavigate();
+    router.replace("/login");
+  }
+
   return (
     <aside className="app-sidebar">
       <Link className="app-brand" href="/" onClick={onNavigate}>
@@ -180,7 +288,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         <strong>SaaS Starter</strong>
       </Link>
       <nav aria-label="Navegação principal">
-        {mainNavigation.map((item) => (
+        {filteredNavigation.map((item) => (
           <SidebarNavItem
             item={item}
             key={item.id}
@@ -205,6 +313,13 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           Sair
         </Button>
       </div>
+      <FeedbackState
+        show={Boolean(authorizationError)}
+        onClose={handleAuthorizationErrorClose}
+        variant="error"
+        title="Sessão inválida"
+        description={authorizationError}
+      />
     </aside>
   );
 }
