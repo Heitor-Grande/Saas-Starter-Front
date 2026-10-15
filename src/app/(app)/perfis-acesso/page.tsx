@@ -73,6 +73,7 @@ export default function AccessProfilesPage() {
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
+  const [activeCreateTab, setActiveCreateTab] = useState("general");
   const [showDetails, setShowDetails] = useState(false);
   const [activeDetailsTab, setActiveDetailsTab] = useState("general");
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
@@ -365,6 +366,7 @@ export default function AccessProfilesPage() {
 
   function closeCreate() {
     setShowCreate(false);
+    setActiveCreateTab("general");
     setName("");
     setDescription("");
     setCreatePermissionIds([]);
@@ -389,6 +391,7 @@ export default function AccessProfilesPage() {
     if (!trimmedDescription) nextErrors.description = "Informe a descrição do perfil.";
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
+      setActiveCreateTab("general");
       return;
     }
 
@@ -496,7 +499,10 @@ export default function AccessProfilesPage() {
                   <Badge bg="light" text="dark">{filteredProfiles.length} {filteredProfiles.length === 1 ? "perfil" : "perfis"}</Badge>
                 </div>
               }
-              onCreate={() => setShowCreate(true)}
+              onCreate={() => {
+                setActiveCreateTab("general");
+                setShowCreate(true);
+              }}
               createLabel="Novo perfil"
               columns={columns}
               data={filteredProfiles}
@@ -530,39 +536,47 @@ export default function AccessProfilesPage() {
             <Modal.Title id="new-profile-title">Novo perfil</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <div className="profiles-form-grid">
-              <FormInput
-                id="profileName" label="Nome do perfil" value={name}
-                onChange={(event) => setName(event.target.value)} error={errors.name} autoFocus required
-              />
-              <FormInput
-                id="profileDescription" label="Descrição" as="textarea" rows={3} value={description}
-                onChange={(event) => setDescription(event.target.value)} error={errors.description} required
-              />
-            </div>
-            <section className="mt-4" aria-labelledby="create-profile-permissions-title">
-              <h3 id="create-profile-permissions-title" className="h6">Permissões</h3>
-              {availablePermissions.length > 0 ? (
-                <div className="profile-permissions">
-                  {availablePermissions.map((permission) => (
-                    <FormCheckbox
-                      key={permission.id}
-                      id={`create-profile-permission-${permission.id}`}
-                      label={permission.name}
-                      description={permission.description}
-                      checked={createPermissionIds.includes(permission.id)}
-                      onChange={(event) => setCreatePermissionIds((current) =>
-                        event.target.checked
-                          ? [...current, permission.id]
-                          : current.filter((permissionId) => permissionId !== permission.id)
-                      )}
-                    />
-                  ))}
+            <Tabs
+              id="new-profile-tabs"
+              activeKey={activeCreateTab}
+              onSelect={(key) => setActiveCreateTab(key ?? "general")}
+              className="global-settings-tabs mb-4"
+            >
+              <Tab eventKey="general" title="Informações Gerais">
+                <div className="profiles-form-grid">
+                  <FormInput
+                    id="profileName" label="Nome do perfil" value={name}
+                    onChange={(event) => setName(event.target.value)} error={errors.name} autoFocus required
+                  />
+                  <FormInput
+                    id="profileDescription" label="Descrição" as="textarea" rows={3} value={description}
+                    onChange={(event) => setDescription(event.target.value)} error={errors.description} required
+                  />
                 </div>
-              ) : (
-                <Alert variant="light" className="mb-0">Nenhuma permissão cadastrada.</Alert>
-              )}
-            </section>
+              </Tab>
+              <Tab eventKey="permissions" title="Permissões">
+                {availablePermissions.length > 0 ? (
+                  <div className="profile-permissions">
+                    {availablePermissions.map((permission) => (
+                      <FormCheckbox
+                        key={permission.id}
+                        id={`create-profile-permission-${permission.id}`}
+                        label={permission.name}
+                        description={permission.description}
+                        checked={createPermissionIds.includes(permission.id)}
+                        onChange={(event) => setCreatePermissionIds((current) =>
+                          event.target.checked
+                            ? [...current, permission.id]
+                            : current.filter((permissionId) => permissionId !== permission.id)
+                        )}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <Alert variant="light" className="mb-0">Nenhuma permissão cadastrada.</Alert>
+                )}
+              </Tab>
+            </Tabs>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="light" onClick={closeCreate} disabled={isCreating}>Cancelar</Button>
