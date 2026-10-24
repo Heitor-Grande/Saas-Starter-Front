@@ -1,13 +1,35 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Badge, Button, Card, Col, Modal, Row } from "react-bootstrap";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, Badge, Button, Card, Col, Modal, Row } from "react-bootstrap";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { FormInput } from "@/components/ui/FormInput";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Loading } from "@/components/ui/Loading";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { auditLogs, type AuditAction, type AuditLog } from "@/mocks/auditLogs";
+import { apiRequest } from "@/util/apiRequest";
+import { getTokenCookie } from "@/util/getTokenCookie";
 
+type AuditAction = "DELETE" | "PATCH" | "POST" | "PUT";
+
+interface AuditLog {
+  id: number;
+  organizacaoid: number;
+  organizacaonome: string;
+  feitoporusuarioid: number;
+  usuarionome: string;
+  usuarioemail: string;
+  perfil: string;
+  feitoem: string;
+  acao: AuditAction;
+  antes: Record<string, unknown> | null;
+  depois: Record<string, unknown> | null;
+}
+
+interface ApiResponse<T> {
+  message?: string;
+  data?: T;
+}
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
@@ -16,44 +38,47 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
 
 const auditColumns: DataTableColumn<AuditLog>[] = [
   {
-    key: "user",
+    key: "usuario",
     header: "Usuário que fez a ação",
     render: (log) => (
       <>
-        <strong>{log.user.name}</strong>
-        <small>{log.user.email}</small>
+        <strong>{log.usuarionome}</strong>
+        <small>{log.usuarioemail}</small>
       </>
     )
   },
   {
-    key: "occurredAt",
+    key: "perfil",
+    header: "Perfil",
+    render: (log) => log.perfil
+  },
+  {
+    key: "feitoem",
     header: "Data da ação",
     render: (log) => (
       <>
-        <strong>{dateFormatter.format(new Date(log.occurredAt))}</strong>
-        <small>{log.organization}</small>
+        <strong>{dateFormatter.format(new Date(log.feitoem))}</strong>
+        <small>{log.organizacaonome}</small>
       </>
     )
   },
   {
-    key: "action",
+    key: "acao",
     header: "Tipo da ação",
     render: (log) => (
-      <span className={`audit-action audit-action-${log.action.toLowerCase()}`}>
-        {log.action}
-      </span>
+      <span className={`audit-action audit-action-${log.acao.toLowerCase()}`}>{log.acao}</span>
     )
   }
 ];
 
-function JsonPanel({ label, value }: { label: string; value: AuditLog["before"] }) {
+function JsonPanel({ label, value }: { label: string; value: AuditLog["antes"] }) {
   return (
     <div className="audit-json-panel">
       <div className="audit-json-heading">
         <h3>{label}</h3>
-        <span>{value ? "JSON" : "Sem dados"}</span>
+        <span>{value !== null ? "JSON" : "Sem dados"}</span>
       </div>
-      {value ? (
+      {value !== null ? (
         <pre>{JSON.stringify(value, null, 2)}</pre>
       ) : (
         <div className="audit-json-empty">Nenhuma informação registrada.</div>
@@ -63,31 +88,88 @@ function JsonPanel({ label, value }: { label: string; value: AuditLog["before"] 
 }
 
 export default function AuditLogsPage() {
+  const [logs, setLogs] = useState<AuditLog[]>([]);
   const [query, setQuery] = useState("");
   const [action, setAction] = useState<AuditAction | "">("");
   const [organization, setOrganization] = useState("");
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [page, setPage] = useState(1);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadLogs() {
+      setIsLoading(true);
+      setLoadError("");
+
+      try {
+        const token = getTokenCookie();
+        if (!token) throw new Error("Sua sessão não foi encontrada. Entre novamente na conta.");
+
+        const response = await apiRequest({
+          path: "/log/findAll",
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const result = (await response.json().catch(() => null)) as ApiResponse<AuditLog[]> | null;
+
+        if (!response.ok) {
+          throw new Error(result?.message || "Não foi possível consultar os logs de auditoria.");
+        }
+        if (!Array.isArray(result?.data)) {
+          throw new Error("A resposta da consulta de logs é inválida.");
+        }
+
+        if (isActive) {
+          setLogs(result.data);
+          setPage(1);
+        }
+      } catch (error) {
+        if (isActive) {
+          setLoadError(
+            error instanceof Error
+              ? error.message
+              : "Não foi possível consultar os logs de auditoria. Tente novamente."
+          );
+        }
+      } finally {
+        if (isActive) setIsLoading(false);
+      }
+    }
+
+    void loadLogs();
+    return () => {
+      isActive = false;
+    };
+  }, [reloadKey]);
 
   const organizations = useMemo(
-    () => Array.from(new Set(auditLogs.map((log) => log.organization))),
-    []
+    () =>
+      Array.from(
+        new Map(logs.map((log) => [log.organizacaoid, log.organizacaonome])).entries()
+      ),
+    [logs]
   );
 
   const filteredLogs = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
 
-    return auditLogs.filter((log) => {
+    return logs.filter((log) => {
       const matchesQuery =
         !normalizedQuery ||
-        log.user.name.toLocaleLowerCase("pt-BR").includes(normalizedQuery) ||
-        log.user.email.toLocaleLowerCase("pt-BR").includes(normalizedQuery) ||
-        log.resource.toLocaleLowerCase("pt-BR").includes(normalizedQuery);
+        log.usuarionome.toLocaleLowerCase("pt-BR").includes(normalizedQuery) ||
+        log.usuarioemail.toLocaleLowerCase("pt-BR").includes(normalizedQuery);
 
-      return matchesQuery && (!action || log.action === action) &&
-        (!organization || log.organization === organization);
+      return (
+        matchesQuery &&
+        (!action || log.acao === action) &&
+        (!organization || String(log.organizacaoid) === organization)
+      );
     });
-  }, [action, organization, query]);
+  }, [action, logs, organization, query]);
 
   function updateFilter(callback: () => void) {
     callback();
@@ -117,7 +199,7 @@ export default function AuditLogsPage() {
                 id="auditSearch"
                 label="Buscar"
                 value={query}
-                placeholder="Usuário, e-mail ou recurso"
+                placeholder="Nome ou e-mail do usuário"
                 onChange={(event) => updateFilter(() => setQuery(event.target.value))}
               />
             </Col>
@@ -133,6 +215,7 @@ export default function AuditLogsPage() {
                 <option value="">Todas</option>
                 <option value="POST">POST</option>
                 <option value="PUT">PUT</option>
+                <option value="PATCH">PATCH</option>
                 <option value="DELETE">DELETE</option>
               </FormSelect>
             </Col>
@@ -144,8 +227,10 @@ export default function AuditLogsPage() {
                 onChange={(event) => updateFilter(() => setOrganization(event.target.value))}
               >
                 <option value="">Todas</option>
-                {organizations.map((item) => (
-                  <option key={item}>{item}</option>
+                {organizations.map(([id, nome]) => (
+                  <option key={id} value={id}>
+                    {nome}
+                  </option>
                 ))}
               </FormSelect>
             </Col>
@@ -160,26 +245,39 @@ export default function AuditLogsPage() {
 
       <Card className="app-card audit-table-card">
         <Card.Body>
-          <DataTable
-            header={
-              <div className="card-heading">
-                <div>
-                  <h2>Histórico de operações</h2>
-                  <p className="audit-table-description">Selecione um registro para visualizar os detalhes.</p>
+          {isLoading ? (
+            <Loading label="Carregando logs" description="Consultando o histórico de auditoria." />
+          ) : loadError ? (
+            <Alert variant="danger" className="mb-0">
+              <p>{loadError}</p>
+              <Button variant="outline-danger" onClick={() => setReloadKey((value) => value + 1)}>
+                Tentar novamente
+              </Button>
+            </Alert>
+          ) : (
+            <DataTable
+              header={
+                <div className="card-heading">
+                  <div>
+                    <h2>Histórico de operações</h2>
+                    <p className="audit-table-description">
+                      Selecione um registro para visualizar os detalhes.
+                    </p>
+                  </div>
+                  <Badge bg="light" text="dark">
+                    {filteredLogs.length} {filteredLogs.length === 1 ? "registro" : "registros"}
+                  </Badge>
                 </div>
-                <Badge bg="light" text="dark">
-                  {filteredLogs.length} {filteredLogs.length === 1 ? "registro" : "registros"}
-                </Badge>
-              </div>
-            }
-            columns={auditColumns}
-            data={filteredLogs}
-            getRowKey={(log) => log.id}
-            emptyMessage="Nenhum registro corresponde aos filtros selecionados."
-            page={page}
-            onPageChange={setPage}
-            onRowClick={setSelectedLog}
-          />
+              }
+              columns={auditColumns}
+              data={filteredLogs}
+              getRowKey={(log) => String(log.id)}
+              emptyMessage="Nenhum registro corresponde aos filtros selecionados."
+              page={page}
+              onPageChange={setPage}
+              onRowClick={setSelectedLog}
+            />
+          )}
         </Card.Body>
       </Card>
 
@@ -194,25 +292,42 @@ export default function AuditLogsPage() {
           <>
             <Modal.Header closeButton>
               <div>
-                <span className="audit-modal-id">{selectedLog.id}</span>
+                <span className="audit-modal-id">LOG-{selectedLog.id}</span>
                 <Modal.Title>Detalhes da operação</Modal.Title>
               </div>
             </Modal.Header>
             <Modal.Body>
               <div className="audit-modal-summary">
-                <div><span>Usuário</span><strong>{selectedLog.user.name}</strong></div>
-                <div><span>Data e hora</span><strong>{dateFormatter.format(new Date(selectedLog.occurredAt))}</strong></div>
-                <div><span>Operação</span><strong>{selectedLog.action}</strong></div>
-                <div><span>Recurso</span><strong>{selectedLog.resource}</strong></div>
-                <div><span>Organização</span><strong>{selectedLog.organization}</strong></div>
+                <div>
+                  <span>Usuário</span>
+                  <strong>{selectedLog.usuarionome}</strong>
+                </div>
+                <div>
+                  <span>Data e hora</span>
+                  <strong>{dateFormatter.format(new Date(selectedLog.feitoem))}</strong>
+                </div>
+                <div>
+                  <span>Operação</span>
+                  <strong>{selectedLog.acao}</strong>
+                </div>
+                <div>
+                  <span>Perfil</span>
+                  <strong>{selectedLog.perfil}</strong>
+                </div>
+                <div>
+                  <span>Organização</span>
+                  <strong>{selectedLog.organizacaonome}</strong>
+                </div>
               </div>
               <div className="audit-comparison-grid">
-                <JsonPanel label="Antes" value={selectedLog.before} />
-                <JsonPanel label="Depois" value={selectedLog.after} />
+                <JsonPanel label="Antes" value={selectedLog.antes} />
+                <JsonPanel label="Depois" value={selectedLog.depois} />
               </div>
             </Modal.Body>
             <Modal.Footer>
-              <Button variant="light" onClick={() => setSelectedLog(null)}>Fechar</Button>
+              <Button variant="light" onClick={() => setSelectedLog(null)}>
+                Fechar
+              </Button>
             </Modal.Footer>
           </>
         ) : null}
