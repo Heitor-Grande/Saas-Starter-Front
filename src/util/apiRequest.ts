@@ -9,7 +9,11 @@ interface ApiRequestOptions {
   body?: BodyInit | Record<string, unknown>;
 }
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+if(!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("A variável de ambiente NEXT_PUBLIC_API_URL deve ser definida no arquivo .env");
+}
+
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 function isJsonBody(body: ApiRequestOptions["body"]): body is Record<string, unknown> {
   return body !== null && typeof body === "object" && !(body instanceof Blob) &&
