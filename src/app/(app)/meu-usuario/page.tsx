@@ -228,7 +228,6 @@ export default function CurrentUserPage() {
           <div className="global-settings-tabs-wrap">
             <Nav variant="tabs" className="global-settings-tabs">
               <Nav.Item><Nav.Link eventKey="personal">Dados pessoais</Nav.Link></Nav.Item>
-              <Nav.Item><Nav.Link eventKey="contact">Vínculo e contato</Nav.Link></Nav.Item>
             </Nav>
           </div>
 
