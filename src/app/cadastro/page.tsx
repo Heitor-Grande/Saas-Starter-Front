@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Col, Form, Row } from "react-bootstrap";
 import { FeedbackState } from "@/components/ui/FeedbackState";
-import { FormCheckbox } from "@/components/ui/FormCheckbox";
 import { FormInput } from "@/components/ui/FormInput";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Loading } from "@/components/ui/Loading";
@@ -26,6 +25,7 @@ import {
   removerMascaraTelefone
 } from "@/util/removeMascaras";
 import { validarForcaSenha } from "@/util/validarForcaSenha";
+import { ConfirmarEmail } from "./components/confirmarEmail";
 
 interface SignupOrganization {
   name: string;
@@ -71,6 +71,7 @@ type SignupErrors = Partial<Record<OrganizationField | UserField | PaymentField,
 
 interface ApiResponse {
   message: string;
+  data?: { token?: string; expiraEmSegundos?: number };
 }
 
 const states = [
@@ -122,6 +123,9 @@ export default function SignupPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [requestError, setRequestError] = useState("");
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+  const [confirmationToken, setConfirmationToken] = useState("");
+  const [confirmationError, setConfirmationError] = useState("");
 
   function updateOrganization(field: OrganizationField, value: string) {
     setOrganization((current) => ({ ...current, [field]: value }));
@@ -148,6 +152,83 @@ export default function SignupPage() {
         expiry: undefined,
         cvv: undefined
       }));
+    }
+  }
+
+  function buildSignupPayload() {
+    return {
+      organizacao: {
+        nome: organization.name.trim(),
+        cnpj: removerMascaraCnpj(organization.cnpj),
+        planoid: Number(organization.plan),
+        cep: removerMascaraCep(organization.postalCode),
+        logradouro: organization.street.trim(),
+        numero: organization.addressNumber.trim(),
+        complemento: organization.complement.trim() || undefined,
+        bairro: organization.neighborhood.trim(),
+        cidade: organization.city.trim(),
+        estado: organization.state
+      },
+      usuario: {
+        nome: user.fullName.trim(),
+        nomesocial: user.socialName.trim() || undefined,
+        cpf: removerMascaraCpf(user.cpf),
+        datanascimento: user.birthDate,
+        email: user.email.trim(),
+        telefone: removerMascaraTelefone(user.phone),
+        perfilid: Number(user.profile),
+        cargo: user.jobTitle.trim() || undefined,
+        ativo: user.active,
+        senha: user.password
+      }
+    };
+  }
+
+  async function requestConfirmationCode() {
+    setRequestError("");
+    setConfirmationError("");
+    setIsSubmitting(true);
+    try {
+      const response = await apiRequest({
+        path: "/cadastro-inicial/solicitar-confirmacao",
+        method: "POST",
+        body: buildSignupPayload()
+      });
+      const result = (await response.json().catch(() => null)) as ApiResponse | null;
+      if (!response.ok) throw new Error(result?.message || "Não foi possível enviar o código.");
+      const token = result?.data?.token;
+      if (!token) throw new Error("O servidor não devolveu a autorização de confirmação.");
+      setConfirmationToken(token);
+      setShowEmailConfirmation(true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Não foi possível enviar o código.";
+      if (showEmailConfirmation) setConfirmationError(message);
+      else setRequestError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function confirmEmail(codigo: string) {
+    setConfirmationError("");
+    setIsSubmitting(true);
+    try {
+      const response = await apiRequest({
+        path: "/cadastro-inicial/confirmar-email",
+        method: "POST",
+        body: { token: confirmationToken, codigo, cadastro: buildSignupPayload() }
+      });
+      const result = (await response.json().catch(() => null)) as ApiResponse | null;
+      if (!response.ok) throw new Error(result?.message || "Não foi possível confirmar o e-mail.");
+      setShowEmailConfirmation(false);
+      setConfirmationToken("");
+      setShowSuccess(true);
+    } catch (error) {
+      setConfirmationError(
+        error instanceof Error ? error.message : "Não foi possível confirmar o e-mail."
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -183,56 +264,7 @@ export default function SignupPage() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    setRequestError("");
-    setIsSubmitting(true);
-
-    try {
-      const response = await apiRequest({
-        path: "/cadastro-inicial/create",
-        method: "POST",
-        body: {
-          organizacao: {
-            nome: organization.name.trim(),
-            cnpj: removerMascaraCnpj(organization.cnpj),
-            planoid: Number(organization.plan),
-            cep: removerMascaraCep(organization.postalCode),
-            logradouro: organization.street.trim(),
-            numero: organization.addressNumber.trim(),
-            complemento: organization.complement.trim() || undefined,
-            bairro: organization.neighborhood.trim(),
-            cidade: organization.city.trim(),
-            estado: organization.state
-          },
-          usuario: {
-            nome: user.fullName.trim(),
-            nomesocial: user.socialName.trim() || undefined,
-            cpf: removerMascaraCpf(user.cpf),
-            datanascimento: user.birthDate,
-            email: user.email.trim(),
-            telefone: removerMascaraTelefone(user.phone),
-            perfilid: Number(user.profile),
-            cargo: user.jobTitle.trim() || undefined,
-            ativo: user.active,
-            senha: user.password
-          }
-        }
-      });
-      const result = (await response.json().catch(() => null)) as ApiResponse | null;
-
-      if (!response.ok) {
-        throw new Error(result?.message ?? "Não foi possível concluir o cadastro. Tente novamente.");
-      }
-
-      setShowSuccess(true);
-    } catch (error) {
-      setRequestError(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível concluir o cadastro. Tente novamente."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    await requestConfirmationCode();
   }
 
   return (
@@ -241,8 +273,8 @@ export default function SignupPage() {
         <Loading
           visible={isSubmitting}
           mode="overlay"
-          label="Criando conta"
-          description="Estamos cadastrando sua organização e usuário."
+          label={showEmailConfirmation ? "Confirmando e-mail" : "Enviando código"}
+          description="Aguarde enquanto processamos sua solicitação."
         />
         <div className="auth-heading">
           <Link className="auth-brand" href="/">
@@ -400,14 +432,6 @@ export default function SignupPage() {
                 </FormSelect>
               </Col>
               <Col md={6}>
-                <FormInput id="signupJobTitle" label="Cargo" value={user.jobTitle}
-                  onChange={(event) => updateUser("jobTitle", event.target.value)} />
-              </Col>
-              <Col md={6} className="d-flex align-items-end">
-                <FormCheckbox id="signupUserActive" label="Usuário ativo" type="switch" checked={user.active}
-                  onChange={(event) => setUser((current) => ({ ...current, active: event.target.checked }))} />
-              </Col>
-              <Col md={6}>
                 <FormInput id="signupPassword" label="Senha" type="password" value={user.password}
                   onChange={(event) => updateUser("password", event.target.value)} error={errors.password} required />
               </Col>
@@ -515,7 +539,7 @@ export default function SignupPage() {
         <div className="signup-form-actions">
           <Link href="/login">Já tenho uma conta</Link>
           <Button className="starter-button" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Criando conta..." : "Criar conta"}
+            {isSubmitting ? "Enviando código..." : "Continuar e confirmar e-mail"}
           </Button>
         </div>
       </Form>
@@ -536,6 +560,18 @@ export default function SignupPage() {
         variant="error"
         title="Não foi possível concluir o cadastro"
         description={requestError}
+      />
+      <ConfirmarEmail
+        show={showEmailConfirmation}
+        email={user.email}
+        isSubmitting={isSubmitting}
+        error={confirmationError}
+        onHide={() => {
+          setShowEmailConfirmation(false);
+          setConfirmationError("");
+        }}
+        onConfirm={(codigo) => void confirmEmail(codigo)}
+        onResend={() => void requestConfirmationCode()}
       />
       </section>
     </main>
