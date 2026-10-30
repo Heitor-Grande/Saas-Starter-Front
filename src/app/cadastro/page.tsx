@@ -85,6 +85,15 @@ interface PlansApiResponse {
   data?: PublicPlan[];
 }
 
+interface ViaCepResponse {
+  logradouro?: string;
+  complemento?: string;
+  bairro?: string;
+  localidade?: string;
+  uf?: string;
+  erro?: boolean;
+}
+
 const states = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
   "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
@@ -167,6 +176,44 @@ export default function SignupPage() {
     void loadPlans();
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    const cep = removerMascaraCep(organization.postalCode);
+    if (cep.length !== 8) return;
+
+    const controller = new AbortController();
+    async function loadAddress() {
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
+          signal: controller.signal
+        });
+        if (!response.ok) return;
+        const address = (await response.json()) as ViaCepResponse;
+        if (address.erro) return;
+
+        setOrganization((current) => ({
+          ...current,
+          street: address.logradouro ?? current.street,
+          complement: address.complemento || current.complement,
+          neighborhood: address.bairro ?? current.neighborhood,
+          city: address.localidade ?? current.city,
+          state: address.uf ?? current.state
+        }));
+        setErrors((current) => ({
+          ...current,
+          street: undefined,
+          neighborhood: undefined,
+          city: undefined,
+          state: undefined
+        }));
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) return;
+      }
+    }
+
+    void loadAddress();
+    return () => controller.abort();
+  }, [organization.postalCode]);
 
   function updateOrganization(field: OrganizationField, value: string) {
     setOrganization((current) => ({ ...current, [field]: value }));
