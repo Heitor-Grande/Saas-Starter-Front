@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Col, Form, Row } from "react-bootstrap";
@@ -74,6 +74,17 @@ interface ApiResponse {
   data?: { token?: string; expiraEmSegundos?: number };
 }
 
+interface PublicPlan {
+  id: number;
+  nome: string;
+  valor: string;
+}
+
+interface PlansApiResponse {
+  message?: string;
+  data?: PublicPlan[];
+}
+
 const states = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
   "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
@@ -82,7 +93,7 @@ const states = [
 const initialOrganization: SignupOrganization = {
   name: "",
   cnpj: "",
-  plan: "1",
+  plan: "",
   postalCode: "",
   street: "",
   addressNumber: "",
@@ -126,6 +137,36 @@ export default function SignupPage() {
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const [confirmationToken, setConfirmationToken] = useState("");
   const [confirmationError, setConfirmationError] = useState("");
+  const [plans, setPlans] = useState<PublicPlan[]>([]);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(true);
+  const [plansError, setPlansError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    async function loadPlans() {
+      try {
+        const response = await apiRequest({ path: "/planos-publicos", method: "GET" });
+        const result = (await response.json().catch(() => null)) as PlansApiResponse | null;
+        if (!response.ok) throw new Error(result?.message || "Não foi possível carregar os planos.");
+        const availablePlans = result?.data ?? [];
+        if (!active) return;
+        setPlans(availablePlans);
+        setOrganization((current) => ({
+          ...current,
+          plan: current.plan || String(availablePlans[0]?.id ?? "")
+        }));
+        if (availablePlans.length === 0) setPlansError("Nenhum plano está disponível.");
+      } catch (error) {
+        if (active) {
+          setPlansError(error instanceof Error ? error.message : "Não foi possível carregar os planos.");
+        }
+      } finally {
+        if (active) setIsLoadingPlans(false);
+      }
+    }
+    void loadPlans();
+    return () => { active = false; };
+  }, []);
 
   function updateOrganization(field: OrganizationField, value: string) {
     setOrganization((current) => ({ ...current, [field]: value }));
@@ -238,6 +279,7 @@ export default function SignupPage() {
 
     if (!organization.name.trim()) nextErrors.name = "Informe o nome da organização.";
     if (!organization.cnpj.trim()) nextErrors.cnpj = "Informe o CNPJ.";
+    if (!organization.plan) nextErrors.plan = "Selecione um plano.";
     if (!organization.postalCode.trim()) nextErrors.postalCode = "Informe o CEP.";
     if (!organization.street.trim()) nextErrors.street = "Informe o logradouro.";
     if (!organization.addressNumber.trim()) nextErrors.addressNumber = "Informe o número.";
@@ -324,20 +366,20 @@ export default function SignupPage() {
                   label="Plano assinado"
                   value={organization.plan}
                   onChange={(event) => updateOrganization("plan", event.target.value)}
+                  error={errors.plan || plansError}
+                  disabled={isLoadingPlans || plans.length === 0}
+                  required
                 >
-                  <option value="1">Starter</option>
-                  <option value="2">Growth</option>
-                  <option value="3">Scale</option>
+                  <option value="">{isLoadingPlans ? "Carregando planos..." : "Selecione"}</option>
+                  {plans.map((plan) => (
+                    <option key={plan.id} value={plan.id}>
+                      {plan.nome} - {Number(plan.valor).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL"
+                      })}
+                    </option>
+                  ))}
                 </FormSelect>
-              </Col>
-              <Col md={6}>
-                <FormInput
-                  id="signupResponsibleUser"
-                  label="Usuário responsável"
-                  value={user.fullName}
-                  placeholder="Preenchido com o nome do usuário"
-                  readOnly
-                />
               </Col>
               <Col md={4}>
                 <FormInput id="signupOrganizationPostalCode" label="CEP" value={organization.postalCode}
